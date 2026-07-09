@@ -1,0 +1,9 @@
+target/
+.git/
+.idea/
+.vscode/
+Dockerfile
+compose*.yaml
+README.md
+*.iml
+.env

@@ -1,0 +1,25 @@
+package com.focus.adapt.api.application.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class BadgeRequest {
+
+    @NotBlank(message = "Badge name is required")
+    private String name;
+
+    @NotBlank(message = "Badge description is required")
+    private String description;
+
+    @NotBlank(message = "Icon URL is required")
+    private String iconUrl;
+}
