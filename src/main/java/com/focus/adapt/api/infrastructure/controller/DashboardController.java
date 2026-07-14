@@ -1,17 +1,8 @@
 package com.focus.adapt.api.infrastructure.controller;
 
-import com.focus.adapt.api.application.dto.*;
-import com.focus.adapt.api.application.mapper.*;
-import com.focus.adapt.api.infrastructure.exception.ApiResponse;
-import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
-import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
-import com.focus.adapt.api.infrastructure.repository.*;
-import com.focus.adapt.api.infrastructure.security.CurrentUser;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +10,31 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.focus.adapt.api.application.dto.BadgeResponse;
+import com.focus.adapt.api.application.dto.DashboardResponse;
+import com.focus.adapt.api.application.dto.NotificationResponse;
+import com.focus.adapt.api.application.dto.StudyPlanResponse;
+import com.focus.adapt.api.application.dto.UserMissionResponse;
+import com.focus.adapt.api.application.mapper.BadgeMapper;
+import com.focus.adapt.api.application.mapper.MissionMapper;
+import com.focus.adapt.api.application.mapper.NotificationMapper;
+import com.focus.adapt.api.application.mapper.QuestionnaireMapper;
+import com.focus.adapt.api.application.mapper.StudyPlanMapper;
+import com.focus.adapt.api.domain.entity.User;
+import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
+import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
+import com.focus.adapt.api.infrastructure.exception.ApiResponse;
+import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
+import com.focus.adapt.api.infrastructure.repository.PomodoroSessionRepository;
+import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
+import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
+import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
+import com.focus.adapt.api.infrastructure.security.CurrentUser;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/v1/dashboard")
@@ -64,7 +78,7 @@ public class DashboardController {
                 .collect(Collectors.toList());
 
         // 4. Recent notifications
-        List<NotificationResponse> recentNotifications = notificationRepository.findByUserAndRead(user, false, PageRequest.of(0, 5))
+        List<NotificationResponse> recentNotifications = notificationRepository.findByUserAndIsRead(user, false, PageRequest.of(0, 5))
                 .getContent().stream()
                 .map(notificationMapper::toResponse)
                 .collect(Collectors.toList());

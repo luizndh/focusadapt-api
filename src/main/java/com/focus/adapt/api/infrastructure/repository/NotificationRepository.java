@@ -11,5 +11,5 @@ import com.focus.adapt.api.domain.entity.User;
 
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
     Page<Notification> findByUser(User user, Pageable pageable);
-    Page<Notification> findByUserAndRead(User user, boolean read, Pageable pageable);
+    Page<Notification> findByUserAndIsRead(User user, boolean isRead, Pageable pageable);
 }

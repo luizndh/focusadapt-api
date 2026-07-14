@@ -1,5 +1,12 @@
 package com.focus.adapt.api.application.service.impl;
 
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.focus.adapt.api.application.dto.NotificationResponse;
 import com.focus.adapt.api.application.mapper.NotificationMapper;
 import com.focus.adapt.api.application.service.NotificationService;
@@ -8,13 +15,8 @@ import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.infrastructure.exception.BusinessException;
 import com.focus.adapt.api.infrastructure.exception.ResourceNotFoundException;
 import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +30,7 @@ public class NotificationServiceImpl implements NotificationService {
     public Page<NotificationResponse> getMyNotifications(Boolean unreadOnly, User user, Pageable pageable) {
         Page<Notification> notifications;
         if (unreadOnly != null && unreadOnly) {
-            notifications = notificationRepository.findByUserAndRead(user, false, pageable);
+            notifications = notificationRepository.findByUserAndIsRead(user, false, pageable);
         } else {
             notifications = notificationRepository.findByUser(user, pageable);
         }
