@@ -1,27 +1,40 @@
 package com.focus.adapt.api.application.mapper;
 
+import org.mapstruct.Mapper;
+
 import com.focus.adapt.api.application.dto.UserRequest;
 import com.focus.adapt.api.application.dto.UserResponse;
+import com.focus.adapt.api.domain.entity.ProcrastinationProfile;
 import com.focus.adapt.api.domain.entity.User;
-import org.mapstruct.Builder;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))
+@Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "version", ignore = true)
-    @Mapping(target = "points", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "procrastinationProfile", ignore = true)
-    @Mapping(target = "role", ignore = true)
-    @Mapping(target = "authorities", ignore = true)
-    @Mapping(target = "streak", ignore = true)
-    @Mapping(target = "lastStudyDate", ignore = true)
-    User toEntity(UserRequest request);
+    default User toEntity(UserRequest request) {
+        return User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .build();
+    }
 
-    UserResponse toResponse(User entity);
+    default UserResponse toResponse(User entity) {
+        return UserResponse.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .email(entity.getEmail())
+                .onboardingCompleted(entity.isOnboardingCompleted())
+                .questionnaireCompleted(entity.isQuestionnaireCompleted())
+                .procrastinationProfile(map(entity.getProcrastinationProfile()))
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+    default String map(ProcrastinationProfile value) {
+        if (value == null || value.getProfileType() == null) {
+            return null;
+        }
+        return value.getProfileType().name();
+    }
 }

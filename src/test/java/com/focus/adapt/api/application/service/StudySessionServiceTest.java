@@ -1,41 +1,57 @@
 package com.focus.adapt.api.application.service;
 
-import com.focus.adapt.api.application.dto.StudySessionRequest;
-import com.focus.adapt.api.application.dto.StudySessionResponse;
-import com.focus.adapt.api.application.mapper.StudySessionMapper;
-import com.focus.adapt.api.application.service.impl.StudySessionServiceImpl;
-import com.focus.adapt.api.domain.entity.*;
-import com.focus.adapt.api.domain.entity.enums.PomodoroStatus;
-import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
-import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
-import com.focus.adapt.api.infrastructure.repository.*;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.focus.adapt.api.application.dto.StudySessionRequest;
+import com.focus.adapt.api.application.dto.StudySessionResponse;
+import com.focus.adapt.api.application.mapper.StudySessionMapper;
+import com.focus.adapt.api.application.service.impl.StudySessionServiceImpl;
+import com.focus.adapt.api.domain.entity.ActivityLog;
+import com.focus.adapt.api.domain.entity.Badge;
+import com.focus.adapt.api.domain.entity.Mission;
+import com.focus.adapt.api.domain.entity.Notification;
+import com.focus.adapt.api.domain.entity.PointsHistory;
+import com.focus.adapt.api.domain.entity.PomodoroSession;
+import com.focus.adapt.api.domain.entity.StudySession;
+import com.focus.adapt.api.domain.entity.User;
+import com.focus.adapt.api.domain.entity.UserAchievement;
+import com.focus.adapt.api.domain.entity.UserMission;
+import com.focus.adapt.api.domain.entity.enums.PomodoroStatus;
+import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
+import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
+import com.focus.adapt.api.infrastructure.repository.ActivityLogRepository;
+import com.focus.adapt.api.infrastructure.repository.BadgeRepository;
+import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
+import com.focus.adapt.api.infrastructure.repository.PointsHistoryRepository;
+import com.focus.adapt.api.infrastructure.repository.PomodoroSessionRepository;
+import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
+import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
+import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
+import com.focus.adapt.api.infrastructure.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class StudySessionServiceTest {
 
     @Mock
     private StudySessionRepository studySessionRepository;
-    @Mock
-    private StudyPlanRepository studyPlanRepository;
-    @Mock
-    private PomodoroSessionRepository pomodoroSessionRepository;
+        @Mock
+        private PomodoroSessionRepository pomodoroSessionRepository;
     @Mock
     private StudySessionMapper studySessionMapper;
     @Mock

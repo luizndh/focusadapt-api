@@ -1,6 +1,17 @@
 package com.focus.adapt.api.domain.entity;
 
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import com.focus.adapt.api.domain.entity.enums.UserRole;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,14 +25,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-import java.util.List;
 
 @Getter
 @Setter
@@ -61,7 +64,15 @@ public class User extends BaseEntity implements UserDetails {
     private int streak = 0;
 
     @Column(name = "last_study_date")
-    private java.time.LocalDate lastStudyDate;
+    private LocalDate lastStudyDate;
+
+    @Column(name = "onboarding_completed", nullable = false)
+    @Builder.Default
+    private boolean onboardingCompleted = false;
+
+    @Column(name = "questionnaire_completed", nullable = false)
+    @Builder.Default
+    private boolean questionnaireCompleted = false;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "procrastination_profile_id")

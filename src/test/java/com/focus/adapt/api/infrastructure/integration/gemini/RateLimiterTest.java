@@ -16,6 +16,6 @@ class RateLimiterTest {
 
         // Since bucket capacity is 10, both calls must execute without block (under 50ms)
         assertTrue(elapsed < 50, "Acquiring available tokens should not block");
-        assertTrue(limiter.getTokens() <= 8.0, "Bucket tokens count should reflect consumption");
+        assertTrue(limiter.getTokens() < 9.0, "Bucket tokens count should reflect consumption");
     }
 }

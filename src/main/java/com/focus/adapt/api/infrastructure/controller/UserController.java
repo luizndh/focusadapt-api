@@ -1,21 +1,13 @@
 package com.focus.adapt.api.infrastructure.controller;
 
-import com.focus.adapt.api.application.dto.UserRequest;
-import com.focus.adapt.api.application.dto.UserResponse;
-import com.focus.adapt.api.application.service.UserService;
-import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.infrastructure.exception.ApiResponse;
-import com.focus.adapt.api.infrastructure.security.CurrentUser;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,8 +15,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.UUID;
+import com.focus.adapt.api.application.dto.UserOnboardingStatusRequest;
+import com.focus.adapt.api.application.dto.UserQuestionnaireStatusRequest;
+import com.focus.adapt.api.application.dto.UserRequest;
+import com.focus.adapt.api.application.dto.UserResponse;
+import com.focus.adapt.api.application.service.UserService;
+import com.focus.adapt.api.domain.entity.User;
+import com.focus.adapt.api.infrastructure.exception.ApiResponse;
+import com.focus.adapt.api.infrastructure.security.CurrentUser;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -47,14 +51,32 @@ public class UserController {
     @GetMapping("/me")
     @Operation(summary = "Get currently authenticated user profile info")
     public ResponseEntity<ApiResponse<UserResponse>> getMyProfile(@CurrentUser User currentUser) {
-        UserResponse response = UserResponse.builder()
-                .id(currentUser.getId())
-                .name(currentUser.getName())
-                .email(currentUser.getEmail())
-                .createdAt(currentUser.getCreatedAt())
-                .updatedAt(currentUser.getUpdatedAt())
-                .build();
+        UserResponse response = userService.getCurrentUser(currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PatchMapping("/me/onboarding")
+    @Operation(summary = "Update onboarding completion for currently authenticated user")
+    public ResponseEntity<ApiResponse<UserResponse>> updateOnboarding(
+            @CurrentUser User currentUser,
+            @Valid @RequestBody UserOnboardingStatusRequest request
+    ) {
+        UserResponse updated = userService.updateOnboardingStatus(currentUser.getId(), request.getCompleted());
+        return ResponseEntity.ok(ApiResponse.success(updated, "Onboarding status updated successfully"));
+    }
+
+    @PatchMapping("/me/questionnaire")
+    @Operation(summary = "Update questionnaire completion for currently authenticated user")
+    public ResponseEntity<ApiResponse<UserResponse>> updateQuestionnaire(
+            @CurrentUser User currentUser,
+            @Valid @RequestBody UserQuestionnaireStatusRequest request
+    ) {
+        UserResponse updated = userService.updateQuestionnaireStatus(
+                currentUser.getId(),
+                request.getCompleted(),
+                request.getProfile()
+        );
+        return ResponseEntity.ok(ApiResponse.success(updated, "Questionnaire status updated successfully"));
     }
 
     @GetMapping("/{id}")

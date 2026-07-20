@@ -17,8 +17,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
@@ -55,8 +58,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    log.warn("JwtAuthenticationFilter: User {} not found or disabled", userEmail);
                 }
             }
+        } else {
+            log.warn("JwtAuthenticationFilter: Invalid or expired JWT token for path {}", request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);

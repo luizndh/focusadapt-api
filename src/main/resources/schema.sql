@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(255) NOT NULL DEFAULT 'USER',
     streak INTEGER NOT NULL DEFAULT 0,
     last_study_date DATE,
+    onboarding_completed BOOLEAN NOT NULL DEFAULT false,
+    questionnaire_completed BOOLEAN NOT NULL DEFAULT false,
     procrastination_profile_id UUID,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
@@ -223,3 +225,11 @@ CREATE TABLE IF NOT EXISTS points_history (
     version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- Seed Default Procrastination Profiles
+INSERT INTO procrastination_profiles (id, profile_type, description, characteristics, tips, created_at, updated_at, version)
+VALUES 
+    ('a0000000-0000-0000-0000-000000000001', 'PERFECTIONIST', 'Perfil Perfeccionista: busca perfeição e teme erros.', 'Busca pela perfeição, medo de errar, autocrítica elevada.', 'Divida tarefas em etapas pequenas e comemore progressos parciais.', NOW(), NOW(), 0),
+    ('a0000000-0000-0000-0000-000000000002', 'STIMULUS_SEEKER', 'Perfil Buscador de Estímulos: busca novidades e recompensas rápidas.', 'Necessidade de novidade, busca por desafios dinâmicos, tédio com rotina.', 'Utilize ciclos Pomodoro curtos e alterne disciplinas.', NOW(), NOW(), 0)
+ON CONFLICT (profile_type) DO NOTHING;
+
