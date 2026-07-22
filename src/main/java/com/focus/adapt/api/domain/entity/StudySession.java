@@ -63,6 +63,10 @@ public class StudySession extends BaseEntity {
     @JoinColumn(name = "study_plan_id")
     private StudyPlan studyPlan;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "study_task_id")
+    private StudyTask studyTask;
+
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "pomodoro_session_id")
     private PomodoroSession pomodoroSession;

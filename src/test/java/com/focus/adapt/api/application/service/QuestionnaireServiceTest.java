@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.times;
@@ -22,7 +20,6 @@ import com.focus.adapt.api.application.dto.ProcrastinationProfileResponse;
 import com.focus.adapt.api.application.dto.UserAnswerItemRequest;
 import com.focus.adapt.api.application.dto.UserAnswerSubmitRequest;
 import com.focus.adapt.api.application.mapper.QuestionnaireMapper;
-import com.focus.adapt.api.application.service.impl.QuestionnaireServiceImpl;
 import com.focus.adapt.api.domain.entity.AnswerOption;
 import com.focus.adapt.api.domain.entity.ProcrastinationProfile;
 import com.focus.adapt.api.domain.entity.Question;
@@ -36,6 +33,7 @@ import com.focus.adapt.api.infrastructure.repository.QuestionRepository;
 import com.focus.adapt.api.infrastructure.repository.QuestionnaireRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAnswerRepository;
 import com.focus.adapt.api.infrastructure.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class QuestionnaireServiceTest {
@@ -56,9 +54,11 @@ class QuestionnaireServiceTest {
     private QuestionnaireMapper questionnaireMapper;
     @Mock
     private GeminiService geminiService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
-    private QuestionnaireServiceImpl questionnaireService;
+    private QuestionnaireService questionnaireService;
 
     @Test
     void shouldSubmitAnswersAndIdentifyProfile() {
@@ -111,8 +111,7 @@ class QuestionnaireServiceTest {
         verify(userAnswerRepository, times(1)).save(any(UserAnswer.class));
         verify(userRepository, times(1)).save(user);
 
-        // Verify Gemini integrations
-        verify(geminiService, times(1)).generateStudyPlan(eq("Finish thesis"), any(User.class));
-        verify(geminiService, times(1)).generateMissions(anyString(), any(User.class));
+        // Verify event published
+        verify(eventPublisher, times(1)).publishEvent(any(com.focus.adapt.api.application.event.QuestionnaireCompletedEvent.class));
     }
 }

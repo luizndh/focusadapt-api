@@ -1,18 +1,90 @@
 package com.focus.adapt.api.application.service;
 
-import com.focus.adapt.api.application.dto.StudyPlanRequest;
-import com.focus.adapt.api.application.dto.StudyPlanResponse;
-import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import java.util.UUID;
 
-public interface StudyPlanService {
-    StudyPlanResponse createStudyPlan(StudyPlanRequest request, User user);
-    Page<StudyPlanResponse> getMyStudyPlans(StudyPlanStatus status, User user, Pageable pageable);
-    StudyPlanResponse getStudyPlanById(UUID id, User user);
-    StudyPlanResponse updateStudyPlan(UUID id, StudyPlanRequest request, User user);
-    void deleteStudyPlan(UUID id, User user);
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.focus.adapt.api.application.dto.StudyPlanRequest;
+import com.focus.adapt.api.application.dto.StudyPlanResponse;
+import com.focus.adapt.api.application.mapper.StudyPlanMapper;
+import com.focus.adapt.api.domain.entity.StudyPlan;
+import com.focus.adapt.api.domain.entity.User;
+import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
+import com.focus.adapt.api.infrastructure.exception.BusinessException;
+import com.focus.adapt.api.infrastructure.exception.ResourceNotFoundException;
+import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class StudyPlanService {
+
+    private final StudyPlanRepository studyPlanRepository;
+    private final StudyPlanMapper studyPlanMapper;
+
+    @Transactional
+    public StudyPlanResponse createStudyPlan(StudyPlanRequest request, User user) {
+        StudyPlan plan = studyPlanMapper.toEntity(request);
+        plan.setUser(user);
+        StudyPlan saved = studyPlanRepository.save(plan);
+        return studyPlanMapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<StudyPlanResponse> getMyStudyPlans(StudyPlanStatus status, User user, Pageable pageable) {
+        Page<StudyPlan> plans;
+        if (status == null) {
+            plans = studyPlanRepository.findByUser(user, pageable);
+        } else {
+            plans = studyPlanRepository.findByUserAndStatus(user, status, pageable);
+        }
+        return plans.map(studyPlanMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public StudyPlanResponse getStudyPlanById(UUID id, User user) {
+        StudyPlan plan = studyPlanRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Study plan not found with ID: " + id));
+
+        if (!plan.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("You do not have permission to view this study plan");
+        }
+
+        return studyPlanMapper.toResponse(plan);
+    }
+
+    @Transactional
+    public StudyPlanResponse updateStudyPlan(UUID id, StudyPlanRequest request, User user) {
+        StudyPlan plan = studyPlanRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Study plan not found with ID: " + id));
+
+        if (!plan.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("You do not have permission to modify this study plan");
+        }
+
+        plan.setTitle(request.getTitle());
+        plan.setDescription(request.getDescription());
+        plan.setStartDate(request.getStartDate());
+        plan.setEndDate(request.getEndDate());
+        plan.setStatus(request.getStatus());
+
+        StudyPlan updated = studyPlanRepository.save(plan);
+        return studyPlanMapper.toResponse(updated);
+    }
+
+    @Transactional
+    public void deleteStudyPlan(UUID id, User user) {
+        StudyPlan plan = studyPlanRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Study plan not found with ID: " + id));
+
+        if (!plan.getUser().getId().equals(user.getId())) {
+            throw new BusinessException("You do not have permission to delete this study plan");
+        }
+
+        studyPlanRepository.delete(plan);
+    }
 }

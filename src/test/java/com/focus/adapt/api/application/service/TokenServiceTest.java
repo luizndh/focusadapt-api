@@ -1,6 +1,5 @@
 package com.focus.adapt.api.application.service;
 
-import com.focus.adapt.api.application.service.impl.TokenServiceImpl;
 import com.focus.adapt.api.domain.entity.RefreshToken;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.UserRole;
@@ -31,7 +30,7 @@ class TokenServiceTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     @InjectMocks
-    private TokenServiceImpl tokenService;
+    private TokenService tokenService;
 
     private User testUser;
 

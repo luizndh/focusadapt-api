@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS questions (
 CREATE TABLE IF NOT EXISTS answer_options (
     id UUID NOT NULL PRIMARY KEY,
     text TEXT NOT NULL,
-    value INTEGER NOT NULL,
+    "value" INTEGER NOT NULL,
     procrastination_profile_type VARCHAR(255),
     question_id UUID NOT NULL,
     created_at TIMESTAMP NOT NULL,
@@ -143,6 +143,22 @@ CREATE TABLE IF NOT EXISTS pomodoro_sessions (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE IF NOT EXISTS study_tasks (
+    id UUID NOT NULL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(255) NOT NULL,
+    due_date TIMESTAMP,
+    completed_at TIMESTAMP,
+    user_id UUID NOT NULL,
+    study_plan_id UUID,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    version INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (study_plan_id) REFERENCES study_plans(id)
+);
+
 CREATE TABLE IF NOT EXISTS study_sessions (
     id UUID NOT NULL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -155,12 +171,14 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     user_id UUID NOT NULL,
     study_plan_id UUID,
     pomodoro_session_id UUID,
+    study_task_id UUID,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (study_plan_id) REFERENCES study_plans(id),
-    FOREIGN KEY (pomodoro_session_id) REFERENCES pomodoro_sessions(id)
+    FOREIGN KEY (pomodoro_session_id) REFERENCES pomodoro_sessions(id),
+    FOREIGN KEY (study_task_id) REFERENCES study_tasks(id)
 );
 
 CREATE TABLE IF NOT EXISTS user_answers (

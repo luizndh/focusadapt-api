@@ -23,7 +23,6 @@ import com.focus.adapt.api.application.mapper.MissionMapper;
 import com.focus.adapt.api.application.mapper.NotificationMapper;
 import com.focus.adapt.api.application.mapper.QuestionnaireMapper;
 import com.focus.adapt.api.application.mapper.StudyPlanMapper;
-import com.focus.adapt.api.application.service.impl.DashboardServiceImpl;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
@@ -68,7 +67,7 @@ class DashboardServiceTest {
     private QuestionnaireMapper questionnaireMapper;
 
     @InjectMocks
-    private DashboardServiceImpl dashboardService;
+    private DashboardService dashboardService;
 
     private User testUser;
 
