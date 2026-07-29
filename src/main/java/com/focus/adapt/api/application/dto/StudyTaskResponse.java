@@ -14,4 +14,7 @@ public class StudyTaskResponse {
     private String description;
     private StudyTaskStatus status;
     private UUID studyPlanId;
+    private int sortOrder;
+    private int estimatedDurationMinutes;
+    private String content;
 }

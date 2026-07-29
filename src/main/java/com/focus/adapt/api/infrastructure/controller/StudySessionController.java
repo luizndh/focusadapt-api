@@ -32,7 +32,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/study-sessions")
 @RequiredArgsConstructor
-@Tag(name = "Study Sessions", description = "Endpoints for managing study and Pomodoro sessions")
+@Tag(name = "Study Sessions", description = "Endpoints for managing study sessions")
 @SecurityRequirement(name = "Bearer Authentication")
 public class StudySessionController {
 
@@ -92,19 +92,6 @@ public class StudySessionController {
     ) {
         studySessionService.deleteStudySession(id, user);
         ApiResponse<Void> response = ApiResponse.success(null, "Study session deleted successfully");
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{id}/pomodoro")
-    @Operation(summary = "Start and link a Pomodoro timer session to a study session")
-    public ResponseEntity<ApiResponse<StudySessionResponse>> startPomodoro(
-            @PathVariable UUID id,
-            @RequestParam(defaultValue = "25") int workDuration,
-            @RequestParam(defaultValue = "5") int breakDuration,
-            @CurrentUser User user
-    ) {
-        StudySessionResponse updated = studySessionService.startPomodoro(id, workDuration, breakDuration, user);
-        ApiResponse<StudySessionResponse> response = ApiResponse.success(updated, "Pomodoro session started and linked successfully");
         return ResponseEntity.ok(response);
     }
 }

@@ -13,5 +13,6 @@ import com.focus.adapt.api.domain.entity.enums.StudyTaskStatus;
 
 public interface StudyTaskRepository extends JpaRepository<StudyTask, UUID> {
     List<StudyTask> findByStudyPlan(StudyPlan studyPlan);
+    List<StudyTask> findByStudyPlanOrderBySortOrderAsc(StudyPlan studyPlan);
     Page<StudyTask> findByStudyPlanAndStatus(StudyPlan studyPlan, StudyTaskStatus status, Pageable pageable);
 }

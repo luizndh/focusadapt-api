@@ -22,15 +22,16 @@ public class DashboardResponse {
     private List<UserMissionResponse> activeMissions;
     private List<BadgeResponse> unlockedBadges;
     private List<NotificationResponse> recentNotifications;
-    private PomodoroStats pomodoroStats;
+    private StudyStats studyStats;
 
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class PomodoroStats {
-        private int totalWorkMinutes;
+    public static class StudyStats {
+        private int totalStudyMinutes;
         private int sessionsCount;
+        private int pomodoroSessionsCount;
     }
 }

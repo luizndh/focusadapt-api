@@ -12,6 +12,8 @@ import com.focus.adapt.api.application.dto.StudyTaskResponse;
 import com.focus.adapt.api.application.mapper.StudyTaskMapper;
 import com.focus.adapt.api.domain.entity.StudyPlan;
 import com.focus.adapt.api.domain.entity.StudyTask;
+import com.focus.adapt.api.domain.entity.User;
+import com.focus.adapt.api.infrastructure.exception.BusinessException;
 import com.focus.adapt.api.infrastructure.exception.ResourceNotFoundException;
 import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
 import com.focus.adapt.api.infrastructure.repository.StudyTaskRepository;
@@ -25,6 +27,7 @@ public class StudyTaskService {
     private final StudyTaskRepository studyTaskRepository;
     private final StudyPlanRepository studyPlanRepository;
     private final StudyTaskMapper studyTaskMapper;
+    private final AiService aiService;
 
     @Transactional
     public StudyTaskResponse createTask(StudyTaskRequest request) {
@@ -66,5 +69,25 @@ public class StudyTaskService {
             throw new ResourceNotFoundException("StudyTask not found");
         }
         studyTaskRepository.deleteById(id);
+    }
+
+    @Transactional
+    public StudyTaskResponse getTaskWithContent(UUID taskId, User user) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("StudyTask not found"));
+
+        // Verify ownership through study plan
+        if (!task.getStudyPlan().getUser().getId().equals(user.getId())) {
+            throw new BusinessException("You do not have permission to view this task");
+        }
+
+        // Lazy content generation
+        if (task.getContent() == null) {
+            String content = aiService.generateStudyTaskContent(task, user);
+            task.setContent(content);
+            task = studyTaskRepository.save(task);
+        }
+
+        return studyTaskMapper.toResponse(task);
     }
 }

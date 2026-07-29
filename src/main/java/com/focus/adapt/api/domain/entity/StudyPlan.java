@@ -61,4 +61,8 @@ public class StudyPlan extends BaseEntity {
     @OneToMany(mappedBy = "studyPlan", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<StudySession> studySessions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "studyPlan", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<StudyTask> studyTasks = new ArrayList<>();
 }

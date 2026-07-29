@@ -22,6 +22,15 @@ public class StudyTask extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "sort_order")
+    private int sortOrder;
+
+    @Column(name = "estimated_duration_minutes")
+    private int estimatedDurationMinutes;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
@@ -31,7 +40,7 @@ public class StudyTask extends BaseEntity {
     @JoinColumn(name = "study_plan_id", nullable = false)
     private StudyPlan studyPlan;
 
-    @OneToMany(mappedBy = "studyTask", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "studyTasks")
     @Builder.Default
     private List<StudySession> studySessions = new ArrayList<>();
 }

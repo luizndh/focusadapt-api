@@ -17,6 +17,7 @@ public interface StudyPlanMapper {
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "studySessions", ignore = true)
+    @Mapping(target = "studyTasks", ignore = true)
     StudyPlan toEntity(StudyPlanRequest request);
 
     StudyPlanResponse toResponse(StudyPlan entity);

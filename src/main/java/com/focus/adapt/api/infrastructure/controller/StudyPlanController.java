@@ -1,5 +1,6 @@
 package com.focus.adapt.api.infrastructure.controller;
 
+import com.focus.adapt.api.application.dto.StudyPlanGenerateRequest;
 import com.focus.adapt.api.application.dto.StudyPlanRequest;
 import com.focus.adapt.api.application.dto.StudyPlanResponse;
 import com.focus.adapt.api.application.service.StudyPlanService;
@@ -38,14 +39,14 @@ public class StudyPlanController {
 
     private final StudyPlanService studyPlanService;
 
-    @PostMapping
-    @Operation(summary = "Create a new study plan")
-    public ResponseEntity<ApiResponse<StudyPlanResponse>> create(
-            @Valid @RequestBody StudyPlanRequest request,
+    @PostMapping("/generate")
+    @Operation(summary = "Generate a study plan using AI")
+    public ResponseEntity<ApiResponse<StudyPlanResponse>> generate(
+            @Valid @RequestBody StudyPlanGenerateRequest request,
             @CurrentUser User user
     ) {
-        StudyPlanResponse created = studyPlanService.createStudyPlan(request, user);
-        ApiResponse<StudyPlanResponse> response = ApiResponse.success(created, "Study plan created successfully");
+        StudyPlanResponse generated = studyPlanService.generateStudyPlan(request, user);
+        ApiResponse<StudyPlanResponse> response = ApiResponse.success(generated, "Study plan generated successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

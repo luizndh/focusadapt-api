@@ -7,15 +7,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.focus.adapt.api.application.dto.AiStudyPlanResponse;
+import com.focus.adapt.api.application.dto.StudyPlanGenerateRequest;
 import com.focus.adapt.api.application.dto.StudyPlanRequest;
 import com.focus.adapt.api.application.dto.StudyPlanResponse;
 import com.focus.adapt.api.application.mapper.StudyPlanMapper;
 import com.focus.adapt.api.domain.entity.StudyPlan;
+import com.focus.adapt.api.domain.entity.StudyTask;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
+import com.focus.adapt.api.domain.entity.enums.StudyTaskStatus;
 import com.focus.adapt.api.infrastructure.exception.BusinessException;
 import com.focus.adapt.api.infrastructure.exception.ResourceNotFoundException;
 import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
+import com.focus.adapt.api.infrastructure.repository.StudyTaskRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,14 +30,8 @@ public class StudyPlanService {
 
     private final StudyPlanRepository studyPlanRepository;
     private final StudyPlanMapper studyPlanMapper;
-
-    @Transactional
-    public StudyPlanResponse createStudyPlan(StudyPlanRequest request, User user) {
-        StudyPlan plan = studyPlanMapper.toEntity(request);
-        plan.setUser(user);
-        StudyPlan saved = studyPlanRepository.save(plan);
-        return studyPlanMapper.toResponse(saved);
-    }
+    private final AiService aiService;
+    private final StudyTaskRepository studyTaskRepository;
 
     @Transactional(readOnly = true)
     public Page<StudyPlanResponse> getMyStudyPlans(StudyPlanStatus status, User user, Pageable pageable) {
@@ -86,5 +85,44 @@ public class StudyPlanService {
         }
 
         studyPlanRepository.delete(plan);
+    }
+
+    @Transactional
+    public StudyPlanResponse generateStudyPlan(StudyPlanGenerateRequest request, User user) {
+        AiStudyPlanResponse aiResponse = aiService.generateStudyPlan(
+                request.getTopic(),
+                request.getDescription(),
+                request.getAvailableHoursPerDay(),
+                request.getAvailableDays(),
+                request.getStartDate(),
+                user
+        );
+
+        StudyPlan plan = StudyPlan.builder()
+                .title(aiResponse.getTitle())
+                .description(aiResponse.getDescription())
+                .startDate(aiResponse.getStartDate())
+                .endDate(aiResponse.getEndDate())
+                .status(StudyPlanStatus.ACTIVE)
+                .user(user)
+                .build();
+
+        StudyPlan savedPlan = studyPlanRepository.save(plan);
+
+        if (aiResponse.getTasks() != null) {
+            for (AiStudyPlanResponse.AiStudyTaskItem taskItem : aiResponse.getTasks()) {
+                StudyTask task = StudyTask.builder()
+                        .title(taskItem.getTitle())
+                        .description(taskItem.getDescription())
+                        .sortOrder(taskItem.getOrder())
+                        .estimatedDurationMinutes(taskItem.getEstimatedDurationMinutes())
+                        .status(StudyTaskStatus.PENDING)
+                        .studyPlan(savedPlan)
+                        .build();
+                studyTaskRepository.save(task);
+            }
+        }
+
+        return studyPlanMapper.toResponse(savedPlan);
     }
 }

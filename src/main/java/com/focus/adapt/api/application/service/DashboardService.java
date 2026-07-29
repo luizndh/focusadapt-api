@@ -18,13 +18,14 @@ import com.focus.adapt.api.application.mapper.MissionMapper;
 import com.focus.adapt.api.application.mapper.NotificationMapper;
 import com.focus.adapt.api.application.mapper.QuestionnaireMapper;
 import com.focus.adapt.api.application.mapper.StudyPlanMapper;
-import com.focus.adapt.api.domain.entity.PomodoroSession;
+import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.domain.entity.enums.PomodoroStatus;
+import com.focus.adapt.api.domain.entity.enums.StudyMode;
 import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
+import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
 import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
-import com.focus.adapt.api.infrastructure.repository.PomodoroSessionRepository;
+import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
 import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
@@ -38,10 +39,10 @@ public class DashboardService {
 
     private final UserRepository userRepository;
     private final StudyPlanRepository studyPlanRepository;
+    private final StudySessionRepository studySessionRepository;
     private final UserMissionRepository userMissionRepository;
     private final UserAchievementRepository userAchievementRepository;
     private final NotificationRepository notificationRepository;
-    private final PomodoroSessionRepository pomodoroSessionRepository;
 
     private final StudyPlanMapper studyPlanMapper;
     private final MissionMapper missionMapper;
@@ -78,17 +79,18 @@ public class DashboardService {
                 .map(notificationMapper::toResponse)
                 .collect(Collectors.toList());
 
-        // 5. Pomodoro stats
-        List<PomodoroSession> pomodoros = pomodoroSessionRepository.findByUser(currentUser, Pageable.unpaged())
+        // 5. Study stats from StudySessions
+        List<StudySession> completedSessions = studySessionRepository.findByUserAndStatus(currentUser, StudySessionStatus.COMPLETED, Pageable.unpaged())
                 .getContent();
 
-        int totalMinutes = pomodoros.stream()
-                .filter(p -> p.getStatus() == PomodoroStatus.COMPLETED)
-                .mapToInt(PomodoroSession::getWorkDurationMinutes)
+        int totalStudyMinutes = completedSessions.stream()
+                .mapToInt(StudySession::getDurationMinutes)
                 .sum();
 
-        int completedSessions = (int) pomodoros.stream()
-                .filter(p -> p.getStatus() == PomodoroStatus.COMPLETED)
+        int sessionsCount = completedSessions.size();
+
+        int pomodoroSessionsCount = (int) completedSessions.stream()
+                .filter(s -> s.getStudyMode() == StudyMode.POMODORO)
                 .count();
 
         return DashboardResponse.builder()
@@ -100,9 +102,10 @@ public class DashboardService {
                 .activeMissions(activeMissions)
                 .unlockedBadges(unlockedBadges)
                 .recentNotifications(recentNotifications)
-                .pomodoroStats(DashboardResponse.PomodoroStats.builder()
-                        .totalWorkMinutes(totalMinutes)
-                        .sessionsCount(completedSessions)
+                .studyStats(DashboardResponse.StudyStats.builder()
+                        .totalStudyMinutes(totalStudyMinutes)
+                        .sessionsCount(sessionsCount)
+                        .pomodoroSessionsCount(pomodoroSessionsCount)
                         .build())
                 .build();
     }

@@ -2,7 +2,7 @@ package com.focus.adapt.api.domain.entity.enums;
 
 public enum PointsReason {
     MISSION_COMPLETED,
-    POMODORO_FINISHED,
+    STUDY_SESSION_BONUS,
     PROFILE_COMPLETED,
     STUDY_SESSION_COMPLETED
 }

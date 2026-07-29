@@ -1,7 +1,7 @@
 package com.focus.adapt.api.domain.entity.enums;
 
 public enum StudySessionStatus {
-    SCHEDULED,
+    IN_PROGRESS,
     COMPLETED,
     CANCELLED
 }

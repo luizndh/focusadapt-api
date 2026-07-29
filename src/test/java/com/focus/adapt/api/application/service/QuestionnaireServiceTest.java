@@ -53,8 +53,6 @@ class QuestionnaireServiceTest {
     @Mock
     private QuestionnaireMapper questionnaireMapper;
     @Mock
-    private GeminiService geminiService;
-    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks

@@ -13,7 +13,6 @@ import com.focus.adapt.api.domain.entity.Badge;
 import com.focus.adapt.api.domain.entity.Mission;
 import com.focus.adapt.api.domain.entity.Notification;
 import com.focus.adapt.api.domain.entity.PointsHistory;
-import com.focus.adapt.api.domain.entity.PomodoroSession;
 import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.UserAchievement;
@@ -21,13 +20,12 @@ import com.focus.adapt.api.domain.entity.UserMission;
 import com.focus.adapt.api.domain.entity.enums.ActivityCategory;
 import com.focus.adapt.api.domain.entity.enums.NotificationType;
 import com.focus.adapt.api.domain.entity.enums.PointsReason;
-import com.focus.adapt.api.domain.entity.enums.PomodoroStatus;
+import com.focus.adapt.api.domain.entity.enums.StudyMode;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
 import com.focus.adapt.api.infrastructure.repository.ActivityLogRepository;
 import com.focus.adapt.api.infrastructure.repository.BadgeRepository;
 import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
 import com.focus.adapt.api.infrastructure.repository.PointsHistoryRepository;
-import com.focus.adapt.api.infrastructure.repository.PomodoroSessionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserRepository;
@@ -45,17 +43,13 @@ public class GamificationService {
     private final NotificationRepository notificationRepository;
     private final UserAchievementRepository userAchievementRepository;
     private final BadgeRepository badgeRepository;
-    private final PomodoroSessionRepository pomodoroSessionRepository;
 
     @Transactional
     public void processSessionCompletion(StudySession session, User user) {
         int pointsAwarded = 50;
 
-        PomodoroSession pomodoro = session.getPomodoroSession();
-        if (pomodoro != null && pomodoro.getStatus() == PomodoroStatus.RUNNING) {
-            pomodoro.setStatus(PomodoroStatus.COMPLETED);
-            pomodoro.setEndTime(LocalDateTime.now());
-            pomodoroSessionRepository.save(pomodoro);
+        // Bonus for Pomodoro sessions
+        if (session.getStudyMode() == StudyMode.POMODORO) {
             pointsAwarded += 20;
         }
 
@@ -97,38 +91,31 @@ public class GamificationService {
 
         for (UserMission um : activeMissions) {
             Mission m = um.getMission();
-            boolean progressMade;
 
             String titleLower = m.getTitle().toLowerCase();
             if (titleLower.contains("session") || titleLower.contains("estudo") || titleLower.contains("foco")) {
                 um.setCurrentValue(um.getCurrentValue() + 1);
-                progressMade = true;
-            } else if ((titleLower.contains("pomodoro") || titleLower.contains("timer")) && pomodoro != null) {
+            } else if ((titleLower.contains("pomodoro") || titleLower.contains("timer")) && session.getStudyMode() == StudyMode.POMODORO) {
                 um.setCurrentValue(um.getCurrentValue() + 1);
-                progressMade = true;
             } else if (titleLower.contains("streak") || titleLower.contains("sequência") || titleLower.contains("dia")) {
                 um.setCurrentValue(user.getStreak());
-                progressMade = true;
             } else {
                 um.setCurrentValue(um.getCurrentValue() + 1);
-                progressMade = true;
             }
 
-            if (progressMade) {
-                if (um.getCurrentValue() >= m.getTargetValue()) {
-                    um.setStatus(UserMissionStatus.COMPLETED);
+            if (um.getCurrentValue() >= m.getTargetValue()) {
+                um.setStatus(UserMissionStatus.COMPLETED);
 
-                    Notification notification = Notification.builder()
-                            .user(user)
-                            .title("Mission Completed!")
-                            .content("You completed the mission: " + m.getTitle() + "! Go to your dashboard to claim your points.")
-                            .type(NotificationType.MISSION_COMPLETED)
-                            .isRead(false)
-                            .build();
-                    notificationRepository.save(notification);
-                }
-                userMissionRepository.save(um);
+                Notification notification = Notification.builder()
+                        .user(user)
+                        .title("Mission Completed!")
+                        .content("You completed the mission: " + m.getTitle() + "! Go to your dashboard to claim your points.")
+                        .type(NotificationType.MISSION_COMPLETED)
+                        .isRead(false)
+                        .build();
+                notificationRepository.save(notification);
             }
+            userMissionRepository.save(um);
         }
 
         checkAndUnlockBadges(user);

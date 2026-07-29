@@ -25,11 +25,12 @@ import com.focus.adapt.api.application.mapper.QuestionnaireMapper;
 import com.focus.adapt.api.application.mapper.StudyPlanMapper;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
+import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserRole;
 import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
-import com.focus.adapt.api.infrastructure.repository.PomodoroSessionRepository;
 import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
+import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
 
@@ -40,6 +41,9 @@ class DashboardServiceTest {
     private StudyPlanRepository studyPlanRepository;
 
     @Mock
+    private StudySessionRepository studySessionRepository;
+
+    @Mock
     private UserMissionRepository userMissionRepository;
 
     @Mock
@@ -47,9 +51,6 @@ class DashboardServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
-
-    @Mock
-    private PomodoroSessionRepository pomodoroSessionRepository;
 
     @Mock
     private StudyPlanMapper studyPlanMapper;
@@ -92,7 +93,7 @@ class DashboardServiceTest {
                 .thenReturn(Page.empty());
         when(notificationRepository.findByUserAndIsRead(any(User.class), eq(false), any(Pageable.class)))
                 .thenReturn(Page.empty());
-        when(pomodoroSessionRepository.findByUser(any(User.class), any(Pageable.class)))
+        when(studySessionRepository.findByUserAndStatus(any(User.class), eq(StudySessionStatus.COMPLETED), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         DashboardResponse response = dashboardService.getDashboard(testUser);

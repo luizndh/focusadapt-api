@@ -1,7 +1,8 @@
 package com.focus.adapt.api.application.service;
 
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -12,17 +13,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.focus.adapt.api.application.dto.StudySessionRequest;
 import com.focus.adapt.api.application.dto.StudySessionResponse;
 import com.focus.adapt.api.application.mapper.StudySessionMapper;
-import com.focus.adapt.api.domain.entity.PomodoroSession;
 import com.focus.adapt.api.domain.entity.StudyPlan;
 import com.focus.adapt.api.domain.entity.StudySession;
+import com.focus.adapt.api.domain.entity.StudyTask;
 import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.domain.entity.enums.PomodoroStatus;
+import com.focus.adapt.api.domain.entity.enums.StudyMode;
+import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
 import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
 import com.focus.adapt.api.infrastructure.exception.BusinessException;
 import com.focus.adapt.api.infrastructure.exception.ResourceNotFoundException;
-import com.focus.adapt.api.infrastructure.repository.PomodoroSessionRepository;
-import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
 import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
+import com.focus.adapt.api.infrastructure.repository.StudyTaskRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,8 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class StudySessionService {
 
     private final StudySessionRepository studySessionRepository;
-    private final StudyPlanRepository studyPlanRepository;
-    private final PomodoroSessionRepository pomodoroSessionRepository;
+    private final StudyTaskRepository studyTaskRepository;
     private final StudySessionMapper studySessionMapper;
     private final GamificationService gamificationService;
 
@@ -41,17 +41,17 @@ public class StudySessionService {
         StudySession session = studySessionMapper.toEntity(request);
         session.setUser(user);
 
-        long duration = ChronoUnit.MINUTES.between(request.getStartTime(), request.getEndTime());
-        session.setDurationMinutes((int) duration);
-
-        if (request.getStudyPlanId() != null) {
-            StudyPlan plan = studyPlanRepository.findById(request.getStudyPlanId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Study plan not found: " + request.getStudyPlanId()));
-            if (!plan.getUser().getId().equals(user.getId())) {
-                throw new BusinessException("You do not have permission to link to this study plan");
-            }
-            session.setStudyPlan(plan);
+        if (request.getEndTime() != null) {
+            long duration = ChronoUnit.MINUTES.between(request.getStartTime(), request.getEndTime());
+            session.setDurationMinutes((int) duration);
         }
+
+        if (request.getStudyMode() == StudyMode.POMODORO) {
+            session.setWorkDurationMinutes(request.getWorkDurationMinutes() != null ? request.getWorkDurationMinutes() : 25);
+            session.setBreakDurationMinutes(request.getBreakDurationMinutes() != null ? request.getBreakDurationMinutes() : 5);
+        }
+
+        associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);
 
         StudySession saved = studySessionRepository.save(session);
         return studySessionMapper.toResponse(saved);
@@ -90,24 +90,31 @@ public class StudySessionService {
         StudySessionStatus oldStatus = session.getStatus();
 
         session.setTitle(request.getTitle());
+        session.setStudyMode(request.getStudyMode());
         session.setStartTime(request.getStartTime());
         session.setEndTime(request.getEndTime());
         session.setStatus(request.getStatus());
         session.setNotes(request.getNotes());
 
-        long duration = ChronoUnit.MINUTES.between(request.getStartTime(), request.getEndTime());
-        session.setDurationMinutes((int) duration);
-
-        if (request.getStudyPlanId() != null) {
-            StudyPlan plan = studyPlanRepository.findById(request.getStudyPlanId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Study plan not found: " + request.getStudyPlanId()));
-            if (!plan.getUser().getId().equals(user.getId())) {
-                throw new BusinessException("You do not have permission to link to this study plan");
-            }
-            session.setStudyPlan(plan);
-        } else {
-            session.setStudyPlan(null);
+        if (request.getEndTime() != null) {
+            long duration = ChronoUnit.MINUTES.between(request.getStartTime(), request.getEndTime());
+            session.setDurationMinutes((int) duration);
         }
+
+        if (request.getCompletedCycles() != null) {
+            session.setCompletedCycles(request.getCompletedCycles());
+        }
+        if (request.getEffectiveStudyMinutes() != null) {
+            session.setEffectiveStudyMinutes(request.getEffectiveStudyMinutes());
+        }
+        if (request.getWorkDurationMinutes() != null) {
+            session.setWorkDurationMinutes(request.getWorkDurationMinutes());
+        }
+        if (request.getBreakDurationMinutes() != null) {
+            session.setBreakDurationMinutes(request.getBreakDurationMinutes());
+        }
+
+        associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);
 
         StudySession updated = studySessionRepository.save(session);
 
@@ -130,32 +137,44 @@ public class StudySessionService {
         studySessionRepository.delete(session);
     }
 
-    @Transactional
-    public StudySessionResponse startPomodoro(UUID sessionId, int workDuration, int breakDuration, User user) {
-        StudySession session = studySessionRepository.findById(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Study session not found: " + sessionId));
-
-        if (!session.getUser().getId().equals(user.getId())) {
-            throw new BusinessException("You do not have permission to start a Pomodoro session for this study session");
+    private void associateTasksAndPlan(StudySession session, List<UUID> taskIds, UUID requestedPlanId, User user) {
+        if (taskIds == null || taskIds.isEmpty()) {
+            throw new BusinessException("At least one study task is required");
         }
 
-        if (session.getPomodoroSession() != null) {
-            throw new BusinessException("Pomodoro session already exists for this study session");
+        List<StudyTask> tasks = new ArrayList<>();
+        StudyPlan commonPlan = null;
+
+        for (UUID taskId : taskIds) {
+            StudyTask task = studyTaskRepository.findById(taskId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Study task not found: " + taskId));
+
+            if (!task.getStudyPlan().getUser().getId().equals(user.getId())) {
+                throw new BusinessException("You do not have permission to link to study task: " + taskId);
+            }
+
+            ensureActivePlan(task.getStudyPlan());
+
+            if (commonPlan == null) {
+                commonPlan = task.getStudyPlan();
+            } else if (!commonPlan.getId().equals(task.getStudyPlan().getId())) {
+                throw new BusinessException("All study tasks in a session must belong to the same study plan");
+            }
+
+            tasks.add(task);
         }
 
-        PomodoroSession pomodoro = PomodoroSession.builder()
-                .user(user)
-                .workDurationMinutes(workDuration)
-                .breakDurationMinutes(breakDuration)
-                .startTime(LocalDateTime.now())
-                .status(PomodoroStatus.RUNNING)
-                .build();
+        if (requestedPlanId != null && commonPlan != null && !commonPlan.getId().equals(requestedPlanId)) {
+            throw new BusinessException("Study tasks do not belong to the provided study plan");
+        }
 
-        PomodoroSession savedPomodoro = pomodoroSessionRepository.save(pomodoro);
-        session.setPomodoroSession(savedPomodoro);
-
-        StudySession updated = studySessionRepository.save(session);
-        return studySessionMapper.toResponse(updated);
+        session.setStudyTasks(tasks);
+        session.setStudyPlan(commonPlan);
     }
 
+    private void ensureActivePlan(StudyPlan plan) {
+        if (plan == null || plan.getStatus() != StudyPlanStatus.ACTIVE) {
+            throw new BusinessException("An active study plan is required to study or start a study session");
+        }
+    }
 }
