@@ -4,16 +4,13 @@ CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     points INTEGER NOT NULL DEFAULT 0,
     streak INTEGER NOT NULL DEFAULT 0,
     last_study_date DATE,
     role VARCHAR(255) NOT NULL DEFAULT 'USER',
     onboarding_completed BOOLEAN NOT NULL DEFAULT false,
-    deleted BOOLEAN NOT NULL DEFAULT false,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL
+    deleted BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS procrastination_profiles (
@@ -25,9 +22,6 @@ CREATE TABLE IF NOT EXISTS procrastination_profiles (
     distractibility_score INTEGER NOT NULL,
     temporal_discounting_score INTEGER NOT NULL,
     primary_profile VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -44,9 +38,6 @@ CREATE TABLE IF NOT EXISTS study_plans (
     available_days VARCHAR(255),
     deleted BOOLEAN NOT NULL DEFAULT false,
     user_id UUID NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -59,9 +50,6 @@ CREATE TABLE IF NOT EXISTS study_tasks (
     content TEXT,
     status VARCHAR(255) NOT NULL DEFAULT 'PENDING',
     study_plan_id UUID NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (study_plan_id) REFERENCES study_plans(id)
 );
 
@@ -82,9 +70,6 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     deleted BOOLEAN NOT NULL DEFAULT false,
     user_id UUID NOT NULL,
     study_plan_id UUID,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (study_plan_id) REFERENCES study_plans(id)
 );
@@ -102,10 +87,7 @@ CREATE TABLE IF NOT EXISTS missions (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     xp_reward INTEGER NOT NULL DEFAULT 0,
-    target_value INTEGER NOT NULL DEFAULT 1,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL
+    target_value INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS user_missions (
@@ -114,9 +96,6 @@ CREATE TABLE IF NOT EXISTS user_missions (
     mission_id UUID NOT NULL,
     current_value INTEGER NOT NULL DEFAULT 0,
     status VARCHAR(255) NOT NULL DEFAULT 'IN_PROGRESS',
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (mission_id) REFERENCES missions(id)
 );
@@ -125,10 +104,7 @@ CREATE TABLE IF NOT EXISTS badges (
     id UUID NOT NULL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
-    icon_url VARCHAR(255),
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL
+    icon_url VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS user_achievements (
@@ -136,9 +112,6 @@ CREATE TABLE IF NOT EXISTS user_achievements (
     user_id UUID NOT NULL,
     badge_id UUID NOT NULL,
     unlocked_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (badge_id) REFERENCES badges(id)
 );
@@ -149,9 +122,6 @@ CREATE TABLE IF NOT EXISTS points_history (
     points INTEGER NOT NULL,
     reason VARCHAR(255) NOT NULL,
     description TEXT,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -161,9 +131,6 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     action VARCHAR(255) NOT NULL,
     category VARCHAR(255) NOT NULL,
     details TEXT,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -174,8 +141,5 @@ CREATE TABLE IF NOT EXISTS notifications (
     content TEXT,
     type VARCHAR(255) NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT false,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );

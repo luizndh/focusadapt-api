@@ -25,6 +25,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
@@ -35,6 +36,7 @@ import lombok.Setter;
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
 @SQLRestriction("deleted = false")
+@ToString
 public class User extends BaseEntity implements UserDetails {
 
     @Column(nullable = false, unique = true)
@@ -74,7 +76,7 @@ public class User extends BaseEntity implements UserDetails {
     @Builder.Default
     private boolean questionnaireCompleted = false;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "procrastination_profile_id")
     private ProcrastinationProfile procrastinationProfile;
 

@@ -1,17 +1,18 @@
 package com.focus.adapt.api.infrastructure.integration.gemini;
 
-import com.focus.adapt.api.infrastructure.exception.BusinessException;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
-import java.util.List;
-import java.util.Map;
+import com.focus.adapt.api.infrastructure.exception.BusinessException;
+
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -32,18 +33,7 @@ public class GeminiClient {
      * Sends a generation prompt request to the Gemini API with built-in retries, timeouts, and rate limiting.
      */
     public String generateContent(String prompt) {
-        String url = String.format("/models/%s:generateContent?key=%s",
-                geminiConfig.getModel(), geminiConfig.getApiKey());
-
-        Map<String, Object> requestBody = Map.of(
-                "contents", List.of(
-                        Map.of(
-                                "parts", List.of(
-                                        Map.of("text", prompt)
-                                )
-                        )
-                )
-        );
+        GeminiBody requestBody = new GeminiBody(geminiConfig.getModel(), prompt);
 
         int attempts = 0;
         int maxAttempts = geminiConfig.getMaxRetries() + 1;
@@ -56,20 +46,29 @@ public class GeminiClient {
                 rateLimiter.acquire();
 
                 log.info("GeminiClient: Sending prompt to Gemini API (Attempt {}/{})", attempts, maxAttempts);
-                
+
                 GeminiResponse response = geminiRestClient.post()
-                        .uri(url)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(requestBody)
                         .retrieve()
                         .body(GeminiResponse.class);
 
-                if (response == null || response.candidates() == null || response.candidates().isEmpty()) {
+                log.info("GeminiClient: Received response from Gemini API (status={})", 
+                        response != null ? response.status() : "null");
+
+                if (response == null || response.steps() == null || response.steps().isEmpty()) {
                     throw new BusinessException("Gemini returned an empty response");
                 }
 
-                String responseText = response.candidates().get(0)
-                        .content().parts().get(0).text();
+                // Extrai o texto do primeiro step do tipo "model_output"
+                String responseText = response.steps().stream()
+                        .filter(step -> "model_output".equals(step.type()))
+                        .filter(step -> step.content() != null && !step.content().isEmpty())
+                        .flatMap(step -> step.content().stream())
+                        .filter(content -> "text".equals(content.type()))
+                        .map(ContentPart::text)
+                        .findFirst()
+                        .orElseThrow(() -> new BusinessException("Gemini response contained no text output"));
 
                 log.info("GeminiClient: Response received successfully");
                 return responseText;
@@ -114,9 +113,9 @@ public class GeminiClient {
         return statusCode == 429 || (statusCode >= 500 && statusCode < 600);
     }
 
-    // Structured JSON Response records
-    private record GeminiResponse(List<Candidate> candidates) {}
-    private record Candidate(Content content) {}
-    private record Content(List<Part> parts) {}
-    private record Part(String text) {}
+    // Structured JSON Response records (novo formato da API Gemini)
+    private record GeminiResponse(String id, String status, List<Step> steps) {}
+    private record Step(String type, List<ContentPart> content) {}
+    private record ContentPart(String type, String text) {}
+    private record GeminiBody(String model, String input) {}
 }
