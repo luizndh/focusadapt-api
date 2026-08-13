@@ -1,20 +1,20 @@
 package com.focus.adapt.api.application.service;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.focus.adapt.api.application.dto.AiStudyPlanResponse;
 import com.focus.adapt.api.domain.entity.StudyTask;
 import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfileType;
+import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile;
 import com.focus.adapt.api.infrastructure.integration.gemini.GeminiClient;
 import com.focus.adapt.api.infrastructure.integration.gemini.PromptBuilder;
 import com.focus.adapt.api.infrastructure.integration.gemini.ResponseParser;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +30,7 @@ public class AiService {
                                                   LocalDate startDate, User user) {
         log.info("AiService: Generating study plan for topic '{}'", topic);
 
-        ProcrastinationProfileType profileType = resolveProfileType(user);
+        ProcrastinationProfile profileType = resolveProfileType(user);
         String daysFormatted = availableDays != null ? String.join(", ", availableDays) : null;
         String startDateStr = startDate != null ? startDate.toString() : null;
 
@@ -39,13 +39,14 @@ public class AiService {
         );
 
         String rawResponse = geminiClient.generateContent(prompt);
+        log.debug("Raw response from Gemini: " + rawResponse);
         return responseParser.parseStudyPlanWithTasks(rawResponse);
     }
 
     public String generateStudyTaskContent(StudyTask task, User user) {
         log.info("AiService: Generating content for task '{}'", task.getTitle());
 
-        ProcrastinationProfileType profileType = resolveProfileType(user);
+        ProcrastinationProfile profileType = resolveProfileType(user);
         String planTitle = task.getStudyPlan() != null ? task.getStudyPlan().getTitle() : "Study Plan";
 
         String prompt = promptBuilder.buildStudyTaskContentPrompt(
@@ -55,10 +56,10 @@ public class AiService {
         return geminiClient.generateContent(prompt);
     }
 
-    private ProcrastinationProfileType resolveProfileType(User user) {
+    private ProcrastinationProfile resolveProfileType(User user) {
         if (user.getProcrastinationProfile() != null) {
-            return user.getProcrastinationProfile().getProfileType();
+            return user.getProcrastinationProfile();
         }
-        return ProcrastinationProfileType.STIMULUS_SEEKER;
+        return ProcrastinationProfile.STIMULUS_SEEKER;
     }
 }

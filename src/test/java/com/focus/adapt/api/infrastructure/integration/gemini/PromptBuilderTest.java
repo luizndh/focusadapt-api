@@ -3,7 +3,7 @@ package com.focus.adapt.api.infrastructure.integration.gemini;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfileType;
+import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile;
 
 class PromptBuilderTest {
 
@@ -17,7 +17,7 @@ class PromptBuilderTest {
                 2,
                 "MONDAY,TUESDAY",
                 "2026-08-01",
-                ProcrastinationProfileType.PERFECTIONIST
+                ProcrastinationProfile.PERFECTIONIST
         );
 
         assertTrue(prompt.contains("PERFECTIONIST"), "Prompt should mention procrastination type");

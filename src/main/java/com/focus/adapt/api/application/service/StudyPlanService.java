@@ -101,8 +101,10 @@ public class StudyPlanService {
         StudyPlan plan = StudyPlan.builder()
                 .title(aiResponse.getTitle())
                 .description(aiResponse.getDescription())
+                .category(aiResponse.getCategory())
                 .startDate(aiResponse.getStartDate())
                 .endDate(aiResponse.getEndDate())
+                .totalEstimatedDurationMinutes(aiResponse.getTotalEstimatedDurationMinutes())
                 .status(StudyPlanStatus.ACTIVE)
                 .user(user)
                 .build();
@@ -119,7 +121,8 @@ public class StudyPlanService {
                         .status(StudyTaskStatus.PENDING)
                         .studyPlan(savedPlan)
                         .build();
-                studyTaskRepository.save(task);
+                StudyTask savedTask = studyTaskRepository.save(task);
+                savedPlan.getStudyTasks().add(savedTask);
             }
         }
 

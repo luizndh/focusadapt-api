@@ -4,6 +4,7 @@ import com.focus.adapt.api.domain.entity.enums.StudyTaskStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -17,4 +18,5 @@ public class StudyTaskResponse {
     private int sortOrder;
     private int estimatedDurationMinutes;
     private String content;
+    private LocalDate scheduledDate;
 }

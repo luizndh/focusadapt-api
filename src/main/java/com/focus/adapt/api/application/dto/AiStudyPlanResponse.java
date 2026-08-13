@@ -1,11 +1,11 @@
 package com.focus.adapt.api.application.dto;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -14,8 +14,10 @@ public class AiStudyPlanResponse {
 
     private String title;
     private String description;
+    private String category;
     private LocalDate startDate;
     private LocalDate endDate;
+    private int totalEstimatedDurationMinutes;
     private List<AiStudyTaskItem> tasks;
 
     @Data

@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -20,9 +21,17 @@ public class StudyPlanResponse {
     private UUID id;
     private String title;
     private String description;
+    private String category;
     private LocalDate startDate;
     private LocalDate endDate;
     private StudyPlanStatus status;
+    private int totalEstimatedDurationMinutes;
+    private int availableHoursPerDay;
+    private String availableDays;
+    private int totalTasks;
+    private int completedTasks;
+    private double progress;
+    private List<StudyTaskResponse> tasks;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
