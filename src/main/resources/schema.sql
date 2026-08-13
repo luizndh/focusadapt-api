@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    procrastination_profile VARCHAR(255),
     points INTEGER NOT NULL DEFAULT 0,
     streak INTEGER NOT NULL DEFAULT 0,
     last_study_date DATE,
@@ -13,23 +14,11 @@ CREATE TABLE IF NOT EXISTS users (
     deleted BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS procrastination_profiles (
-    id UUID NOT NULL PRIMARY KEY,
-    user_id UUID NOT NULL UNIQUE,
-    perfectionism_score INTEGER NOT NULL,
-    low_frustration_tolerance_score INTEGER NOT NULL,
-    perceived_task_aversion_score INTEGER NOT NULL,
-    distractibility_score INTEGER NOT NULL,
-    temporal_discounting_score INTEGER NOT NULL,
-    primary_profile VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
 CREATE TABLE IF NOT EXISTS study_plans (
     id UUID NOT NULL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    topic VARCHAR(255) NOT NULL,
+    category VARCHAR(255) NOT NULL,
     status VARCHAR(255) NOT NULL,
     total_estimated_duration_minutes INTEGER NOT NULL DEFAULT 0,
     available_hours_per_day INTEGER NOT NULL DEFAULT 2,
@@ -46,6 +35,7 @@ CREATE TABLE IF NOT EXISTS study_tasks (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     sort_order INTEGER NOT NULL DEFAULT 0,
+    scheduled_date DATE,
     estimated_duration_minutes INTEGER NOT NULL DEFAULT 0,
     content TEXT,
     status VARCHAR(255) NOT NULL DEFAULT 'PENDING',

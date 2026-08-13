@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.focus.adapt.api.application.dto.QuestionnaireSubmitRequest;
 import com.focus.adapt.api.application.dto.UserOnboardingStatusRequest;
-import com.focus.adapt.api.application.dto.UserQuestionnaireStatusRequest;
 import com.focus.adapt.api.application.dto.UserRequest;
 import com.focus.adapt.api.application.dto.UserResponse;
 import com.focus.adapt.api.application.service.UserService;
@@ -66,17 +66,13 @@ public class UserController {
     }
 
     @PatchMapping("/me/questionnaire")
-    @Operation(summary = "Update questionnaire completion for currently authenticated user")
-    public ResponseEntity<ApiResponse<UserResponse>> updateQuestionnaire(
+    @Operation(summary = "Submit questionnaire answers and calculate procrastination profile")
+    public ResponseEntity<ApiResponse<UserResponse>> submitQuestionnaire(
             @CurrentUser User currentUser,
-            @Valid @RequestBody UserQuestionnaireStatusRequest request
+            @RequestBody QuestionnaireSubmitRequest request
     ) {
-        UserResponse updated = userService.updateQuestionnaireStatus(
-                currentUser.getId(),
-                request.getCompleted(),
-                request.getProfile()
-        );
-        return ResponseEntity.ok(ApiResponse.success(updated, "Questionnaire status updated successfully"));
+        UserResponse updated = userService.submitQuestionnaire(currentUser, request.getAnswers());
+        return ResponseEntity.ok(ApiResponse.success(updated, "Questionnaire submitted successfully"));
     }
 
     @GetMapping("/{id}")

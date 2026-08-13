@@ -1,5 +1,6 @@
 package com.focus.adapt.api.application.service;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -11,12 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.focus.adapt.api.application.dto.UserRequest;
 import com.focus.adapt.api.application.dto.UserResponse;
 import com.focus.adapt.api.application.mapper.UserMapper;
-import com.focus.adapt.api.domain.entity.ProcrastinationProfile;
 import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfileType;
+import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile;
 import com.focus.adapt.api.infrastructure.exception.BusinessException;
 import com.focus.adapt.api.infrastructure.exception.ResourceNotFoundException;
-import com.focus.adapt.api.infrastructure.repository.ProcrastinationProfileRepository;
 import com.focus.adapt.api.infrastructure.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,9 +25,9 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final ProcrastinationProfileRepository procrastinationProfileRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ProcrastinationProfileCalculator profileCalculator;
 
     @Transactional
     public UserResponse createUser(UserRequest request) {
@@ -90,22 +89,19 @@ public class UserService {
         return userMapper.toResponse(updatedUser);
     }
 
+    /**
+     * Recebe as respostas do questionário, calcula o perfil de procrastinação
+     * e atualiza o usuário.
+     */
     @Transactional
-    public UserResponse updateQuestionnaireStatus(UUID id, boolean completed, ProcrastinationProfileType profile) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
+    public UserResponse submitQuestionnaire(User user, Map<String, Integer> answers) {
+        ProcrastinationProfile profile = profileCalculator.calculate(answers);
 
-        user.setQuestionnaireCompleted(completed);
+        user.setQuestionnaireCompleted(true);
+        user.setProcrastinationProfile(profile);
 
-        if (profile != null) {
-            ProcrastinationProfile procrastinationProfile = procrastinationProfileRepository
-                    .findByProfileType(profile)
-                    .orElseThrow(() -> new BusinessException("Procrastination profile not found: " + profile));
-            user.setProcrastinationProfile(procrastinationProfile);
-        }
-
-        User updatedUser = userRepository.save(user);
-        return userMapper.toResponse(updatedUser);
+        User savedUser = userRepository.save(user);
+        return userMapper.toResponse(savedUser);
     }
 
     @Transactional

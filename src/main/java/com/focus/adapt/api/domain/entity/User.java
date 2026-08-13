@@ -10,15 +10,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile;
 import com.focus.adapt.api.domain.entity.enums.UserRole;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -76,8 +74,8 @@ public class User extends BaseEntity implements UserDetails {
     @Builder.Default
     private boolean questionnaireCompleted = false;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "procrastination_profile_id")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "procrastination_profile")
     private ProcrastinationProfile procrastinationProfile;
 
     @Override

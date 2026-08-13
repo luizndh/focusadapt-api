@@ -16,7 +16,6 @@ import com.focus.adapt.api.application.dto.UserMissionResponse;
 import com.focus.adapt.api.application.mapper.BadgeMapper;
 import com.focus.adapt.api.application.mapper.MissionMapper;
 import com.focus.adapt.api.application.mapper.NotificationMapper;
-import com.focus.adapt.api.application.mapper.QuestionnaireMapper;
 import com.focus.adapt.api.application.mapper.StudyPlanMapper;
 import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.User;
@@ -48,7 +47,6 @@ public class DashboardService {
     private final MissionMapper missionMapper;
     private final BadgeMapper badgeMapper;
     private final NotificationMapper notificationMapper;
-    private final QuestionnaireMapper questionnaireMapper;
 
     @Transactional(readOnly = true)
     public DashboardResponse getDashboard(User user) {
@@ -97,7 +95,7 @@ public class DashboardService {
                 .userName(currentUser.getName())
                 .xpPoints(currentUser.getPoints())
                 .streak(currentUser.getStreak())
-                .procrastinationProfile(currentUser.getProcrastinationProfile() != null ? questionnaireMapper.toResponse(currentUser.getProcrastinationProfile()) : null)
+                .procrastinationProfile(currentUser.getProcrastinationProfile() != null ? currentUser.getProcrastinationProfile().name() : null)
                 .activeStudyPlan(activePlan)
                 .activeMissions(activeMissions)
                 .unlockedBadges(unlockedBadges)

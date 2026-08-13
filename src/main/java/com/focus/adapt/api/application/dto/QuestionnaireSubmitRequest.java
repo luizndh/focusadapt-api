@@ -1,0 +1,22 @@
+package com.focus.adapt.api.application.dto;
+
+import java.util.Map;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class QuestionnaireSubmitRequest {
+
+    /**
+     * Mapa de respostas do questionário.
+     * Chave: identificador da pergunta.
+     * Valor: valor numérico da resposta selecionada.
+     */
+    private Map<String, Integer> answers;
+}

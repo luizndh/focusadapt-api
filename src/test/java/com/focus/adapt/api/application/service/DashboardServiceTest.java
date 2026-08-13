@@ -21,7 +21,6 @@ import com.focus.adapt.api.application.dto.DashboardResponse;
 import com.focus.adapt.api.application.mapper.BadgeMapper;
 import com.focus.adapt.api.application.mapper.MissionMapper;
 import com.focus.adapt.api.application.mapper.NotificationMapper;
-import com.focus.adapt.api.application.mapper.QuestionnaireMapper;
 import com.focus.adapt.api.application.mapper.StudyPlanMapper;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
@@ -33,9 +32,13 @@ import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
 import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
+import com.focus.adapt.api.infrastructure.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
 
     @Mock
     private StudyPlanRepository studyPlanRepository;
@@ -64,8 +67,6 @@ class DashboardServiceTest {
     @Mock
     private NotificationMapper notificationMapper;
 
-    @Mock
-    private QuestionnaireMapper questionnaireMapper;
 
     @InjectMocks
     private DashboardService dashboardService;

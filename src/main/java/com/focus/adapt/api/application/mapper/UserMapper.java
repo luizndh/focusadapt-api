@@ -1,7 +1,6 @@
 package com.focus.adapt.api.application.mapper;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import com.focus.adapt.api.application.dto.UserRequest;
@@ -13,6 +12,5 @@ public interface UserMapper {
 
     User toEntity(UserRequest request);
 
-    @Mapping(target = "procrastinationProfile", source = "procrastinationProfile.profileType")
     UserResponse toResponse(User entity);
 }
