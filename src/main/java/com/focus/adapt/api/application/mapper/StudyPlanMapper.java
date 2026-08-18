@@ -3,7 +3,6 @@ package com.focus.adapt.api.application.mapper;
 import com.focus.adapt.api.application.dto.StudyPlanRequest;
 import com.focus.adapt.api.application.dto.StudyPlanResponse;
 import com.focus.adapt.api.domain.entity.StudyPlan;
-import com.focus.adapt.api.domain.entity.StudyTask;
 import com.focus.adapt.api.domain.entity.enums.StudyTaskStatus;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Builder;
@@ -17,9 +16,6 @@ import java.util.Comparator;
 public interface StudyPlanMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "version", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "studySessions", ignore = true)
