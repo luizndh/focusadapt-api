@@ -20,6 +20,7 @@ import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudyMode;
 import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
 import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
+import com.focus.adapt.api.domain.entity.enums.StudyTaskStatus;
 import com.focus.adapt.api.infrastructure.exception.BusinessException;
 import com.focus.adapt.api.infrastructure.exception.ResourceNotFoundException;
 import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
@@ -54,6 +55,17 @@ public class StudySessionService {
         associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);
 
         StudySession saved = studySessionRepository.save(session);
+
+        if (saved.getStatus() == StudySessionStatus.COMPLETED) {
+            for (StudyTask task : saved.getStudyTasks()) {
+                if (task.getStatus() != StudyTaskStatus.COMPLETED) {
+                    task.setStatus(StudyTaskStatus.COMPLETED);
+                    studyTaskRepository.save(task);
+                }
+            }
+            gamificationService.processSessionCompletion(saved, user);
+        }
+
         return studySessionMapper.toResponse(saved);
     }
 
@@ -118,8 +130,16 @@ public class StudySessionService {
 
         StudySession updated = studySessionRepository.save(session);
 
-        if (request.getStatus() == StudySessionStatus.COMPLETED && oldStatus != StudySessionStatus.COMPLETED) {
-            gamificationService.processSessionCompletion(updated, user);
+        if (request.getStatus() == StudySessionStatus.COMPLETED) {
+            for (StudyTask task : updated.getStudyTasks()) {
+                if (task.getStatus() != StudyTaskStatus.COMPLETED) {
+                    task.setStatus(StudyTaskStatus.COMPLETED);
+                    studyTaskRepository.save(task);
+                }
+            }
+            if (oldStatus != StudySessionStatus.COMPLETED) {
+                gamificationService.processSessionCompletion(updated, user);
+            }
         }
 
         return studySessionMapper.toResponse(updated);

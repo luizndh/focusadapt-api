@@ -55,9 +55,15 @@ public class StudyTaskService {
         StudyTask task = studyTaskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("StudyTask not found"));
 
-        task.setTitle(request.getTitle());
-        task.setDescription(request.getDescription());
-        task.setStatus(request.getStatus());
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+            task.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            task.setDescription(request.getDescription());
+        }
+        if (request.getStatus() != null) {
+            task.setStatus(request.getStatus());
+        }
 
         StudyTask updated = studyTaskRepository.save(task);
         return studyTaskMapper.toResponse(updated);
