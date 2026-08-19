@@ -21,7 +21,6 @@ public interface StudySessionMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "studyPlan", ignore = true)
     @Mapping(target = "studyTasks", ignore = true)
-    @Mapping(target = "totalPausesCount", ignore = true)
     StudySession toEntity(StudySessionRequest request);
 
     @Mapping(source = "studyPlan.id", target = "studyPlanId")

@@ -30,6 +30,7 @@ public class StudySessionResponse {
     private int workDurationMinutes;
     private int breakDurationMinutes;
     private int completedCycles;
+    private int totalPausesCount;
     private UUID studyPlanId;
     private List<UUID> studyTaskIds;
     private LocalDateTime createdAt;

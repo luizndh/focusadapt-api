@@ -52,6 +52,10 @@ public class StudySessionService {
             session.setBreakDurationMinutes(request.getBreakDurationMinutes() != null ? request.getBreakDurationMinutes() : 5);
         }
 
+        if (request.getTotalPausesCount() != null) {
+            session.setTotalPausesCount(request.getTotalPausesCount());
+        }
+
         associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);
 
         StudySession saved = studySessionRepository.save(session);
@@ -124,6 +128,9 @@ public class StudySessionService {
         }
         if (request.getBreakDurationMinutes() != null) {
             session.setBreakDurationMinutes(request.getBreakDurationMinutes());
+        }
+        if (request.getTotalPausesCount() != null) {
+            session.setTotalPausesCount(request.getTotalPausesCount());
         }
 
         associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);

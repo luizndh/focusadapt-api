@@ -46,7 +46,10 @@ public class GamificationService {
 
     @Transactional
     public void processSessionCompletion(StudySession session, User user) {
-        int pointsAwarded = 50;
+        int taskCount = session.getStudyTasks() != null && !session.getStudyTasks().isEmpty()
+                ? session.getStudyTasks().size()
+                : 1;
+        int pointsAwarded = taskCount * 50;
 
         // Bonus for Pomodoro sessions
         if (session.getStudyMode() == StudyMode.POMODORO) {
