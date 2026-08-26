@@ -282,7 +282,7 @@ public class PromptBuilder {
 
                 Possible Block Types:
                 * EXPLANATION: Conceptual explanation, theories, or principles.
-                * EXAMPLE: Practical code examples, walk-throughs, or concrete illustrations.
+                * EXAMPLE: Practical examples, real-world case studies, behavioral scenarios, or concrete illustrations adapted to the domain.
                 * GUIDED_EXERCISE: Step-by-step guided practice with solutions.
                 * QUIZ: Quick questions with immediate feedback.
                 * FLASHCARD: Active recall question/answer pairs.
@@ -302,7 +302,8 @@ public class PromptBuilder {
 
                 1. Each block should have an estimated duration of 5 to 10 minutes.
                 2. The titles of the blocks must be clear, engaging, and in Portuguese (pt-BR).
-                3. Do NOT generate the full lesson content text in this step. Only generate the block structure.
+                3. DOMAIN ADAPTATION: The study plan can be about ANY subject (psychology, business, health, law, languages, history, science, coding, etc.). Adapt all block titles and types to the actual domain.
+                4. Do NOT generate the full lesson content text in this step. Only generate the block structure.
 
                 ==================================================
                 OUTPUT FORMAT
@@ -369,14 +370,16 @@ public class PromptBuilder {
                 %s
 
                 ==================================================
-                FORMAT & DELIVERY RULES
+                RULES & STRICT SCOPE
                 ==================================================
 
                 1. Output ONLY pure, well-formatted Markdown in Portuguese (Brazil - pt-BR).
                 2. Do NOT wrap in JSON. Do NOT include markdown code blocks around the entire output.
                 3. Start directly with `# %s`.
                 4. Be direct, clear, and high-value. This block should take approximately 5 to 10 minutes to read/complete.
-                5. NEVER use conversational chatbot phrases (e.g. "Espero que tenha gostado", "Me diga se tem dúvidas", "Quer continuar?").
+                5. DOMAIN ADAPTATION: The subject can be about ANY field (e.g., Psychology, Productivity, Law, Health, Languages, Science, Business, Programming, etc.). ONLY use programming code if the Study Plan explicitly pertains to software development. For all other subjects, use realistic case studies, practical scenarios, behavioral techniques, dialogues, or domain-specific examples.
+                6. STRICT BLOCK SCOPE - NO EXTRA SECTIONS: Stay strictly within the requested ContentBlock type (%s). Do NOT add extra sections at the end (such as 'Desafio Rápido', 'Quiz', 'Exercícios para você', 'Próximos Passos', or 'Desafio Prático'). The student has other dedicated blocks for quizzes and challenges.
+                7. NEVER use conversational chatbot phrases (e.g. "Espero que tenha gostado", "Me diga se tem dúvidas", "Quer continuar?", "Até a próxima aula!").
                 """,
             planTitle,
             taskTitle,
@@ -388,7 +391,8 @@ public class PromptBuilder {
             typeGuidelines,
             profileType.name(),
             profilePedagogy,
-            blockTitle
+            blockTitle,
+            blockType.name()
         );
     }
 
@@ -432,23 +436,26 @@ public class PromptBuilder {
         return switch (blockType) {
             case EXPLANATION -> """
                     * Provide a crystal-clear, structured explanation of the core concept.
-                    * Use analogies, bullet points, and clean syntax highlights.
-                    * Explain the 'why' and 'how' with zero unnecessary fluff.""";
+                    * Use analogies, real-world connections, bullet points, and clean formatting.
+                    * Explain the 'why' and 'how' with zero unnecessary fluff.
+                    * Stay strictly on conceptual explanation. Do NOT add exercises, quizzes, or challenges at the end.""";
             case EXAMPLE -> """
-                    * Provide realistic, clean, and fully commented code/practical examples.
-                    * Break down the example line by line or step by step.
-                    * Show expected outputs or results clearly.""";
+                    * Provide a detailed, realistic practical example, case study, or concrete demonstration appropriate for the subject.
+                    * If the topic is software development, use clean, well-commented code. If the topic is non-technical (e.g. psychology, business, productivity, law, health), use realistic case studies, practical dialogue, behavioral scenarios, or step-by-step applications from daily life or professional practice.
+                    * Break down the example step by step with clear analysis.
+                    * Do NOT add challenges, quizzes, quick tasks, or homework sections at the end.""";
             case GUIDED_EXERCISE -> """
-                    * Present a practical problem scenario and guide the student.
+                    * Present a practical problem or scenario and guide the student through resolving it.
+                    * Adapt to the subject domain (e.g., behavioral exercise, business problem, calculation, or coding task).
                     * Format strictly using the following sections:
                       ### Enunciado
-                      [Descrição do problema e objetivo prático]
+                      [Descrição do problema, cenário ou situação prática]
                       ### Dica
                       [Dica para orientar o início do raciocínio]
                       ### Resolução
-                      [Código ou passo a passo completo comentado]""";
+                      [Passo a passo completo e resolução explicada detalhadamente]""";
             case QUIZ -> """
-                    * Provide 2 to 3 concise multiple choice questions.
+                    * Provide 2 to 3 concise multiple choice questions directly related to the task topic.
                     * Format each question strictly as:
                       ### Questão 1
                       [Enunciado da pergunta]
@@ -459,31 +466,32 @@ public class PromptBuilder {
                       **Resposta Correta:** A
                       **Explicação:** [Explicação concisa do porquê está correta e as outras erradas]""";
             case FLASHCARD -> """
-                    * Provide 2 to 4 active recall flashcards.
+                    * Provide 2 to 4 active recall flashcards on key concepts.
                     * Format each card strictly as:
                       ### Card 1
-                      **Frente:** [Pergunta ou conceito chave para recordar]
-                      **Verso:** [Resposta direta, definição essencial ou exemplo chave]""";
+                      **Frente:** [Pergunta, termo ou conceito chave para recordar]
+                      **Verso:** [Resposta direta, definição essencial ou aplicação chave]""";
             case CHALLENGE -> """
                     * Present a concise micro-challenge or practical problem to solve.
+                    * Adapt to the subject (e.g. behavioral change challenge, scenario analysis, case problem, or technical challenge).
                     * Format strictly using the following sections:
                       ### Desafio
                       [Descrição do desafio e requisitos]
                       ### Dica
                       [Dica útil para começar]
                       ### Resolução
-                      [Código completo e explicação da solução]""";
+                      [Solução completa comentada e explicação]""";
             case CHECKPOINT -> """
-                    * A self-assessment checkpoint with 3 to 4 verification criteria.
+                    * A self-assessment checkpoint with 3 to 4 verification criteria for the student.
                     * Format as:
                       ### Verificação de Compreensão
-                      - [ ] [Critério 1 que o aluno deve ter compreendido]
-                      - [ ] [Critério 2 que o aluno deve ter compreendido]
-                      - [ ] [Critério 3 que o aluno deve ter compreendido]
-                      **Mensagem:** [Mensagem encorajadora sobre o progresso]""";
+                      - [ ] [Critério 1 que o aluno deve ter compreendido ou conseguido aplicar]
+                      - [ ] [Critério 2 que o aluno deve ter compreendido ou conseguido aplicar]
+                      - [ ] [Critério 3 que o aluno deve ter compreendido ou conseguido aplicar]
+                      **Mensagem:** [Mensagem encorajadora sobre o progresso no tema]""";
             case SUMMARY -> """
-                    * 3 to 5 bullet points summarizing the most vital takeaways.
-                    * A 'Dica de Ouro' (Golden Rule / Pro Tip) for real-world application.""";
+                    * 3 to 5 bullet points summarizing the most vital takeaways and practical insights.
+                    * A 'Dica de Ouro' (Golden Rule / Pro Tip) for real-world application of the topic.""";
         };
     }
 
