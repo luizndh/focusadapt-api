@@ -92,7 +92,7 @@ class StudyTaskServiceTest {
         when(contentBlockRepository.save(any(ContentBlock.class))).thenAnswer(i -> i.getArgument(0));
 
         StudyTaskResponse expectedResponse = StudyTaskResponse.builder().id(task.getId()).build();
-        when(studyTaskMapper.toResponse(any(StudyTask.class))).thenReturn(expectedResponse);
+        when(studyTaskMapper.toResponseWithBlocks(any(StudyTask.class))).thenReturn(expectedResponse);
 
         StudyTaskResponse response = studyTaskService.getTaskWithBlocks(task.getId(), user);
 
@@ -113,7 +113,7 @@ class StudyTaskServiceTest {
         when(contentBlockRepository.findByStudyTaskOrderBySortOrderAsc(task)).thenReturn(List.of(existingBlock));
 
         StudyTaskResponse expectedResponse = StudyTaskResponse.builder().id(task.getId()).build();
-        when(studyTaskMapper.toResponse(any(StudyTask.class))).thenReturn(expectedResponse);
+        when(studyTaskMapper.toResponseWithBlocks(any(StudyTask.class))).thenReturn(expectedResponse);
 
         studyTaskService.getTaskWithBlocks(task.getId(), user);
 

@@ -120,7 +120,7 @@ public class StudyTaskService {
             }
         }
 
-        return studyTaskMapper.toResponse(task);
+        return studyTaskMapper.toResponseWithBlocks(task);
     }
 
     /**

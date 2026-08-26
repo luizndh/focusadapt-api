@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.focus.adapt.api.application.dto.QuestionnaireSubmitRequest;
 import com.focus.adapt.api.application.dto.UserRequest;
 import com.focus.adapt.api.application.dto.UserResponse;
 import com.focus.adapt.api.application.mapper.UserMapper;
@@ -32,7 +33,7 @@ public class UserService {
     @Transactional
     public UserResponse createUser(UserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException("Email already in use: " + request.getEmail());
+            throw new BusinessException("User already exists with email: " + request.getEmail());
         }
 
         User user = userMapper.toEntity(request);
@@ -65,7 +66,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
+        if (!user.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException("Email already in use: " + request.getEmail());
         }
 
@@ -90,9 +91,28 @@ public class UserService {
     }
 
     /**
-     * Recebe as respostas do questionário, calcula o perfil de procrastinação
+     * Recebe as respostas do questionário ou o perfil diretamente, calcula se necessário
      * e atualiza o usuário.
      */
+    @Transactional
+    public UserResponse submitQuestionnaire(User user, QuestionnaireSubmitRequest request) {
+        ProcrastinationProfile profile;
+
+        if (request != null && request.getProfile() != null) {
+            profile = request.getProfile();
+        } else if (request != null && request.getAnswers() != null && !request.getAnswers().isEmpty()) {
+            profile = profileCalculator.calculate(request.getAnswers());
+        } else {
+            profile = ProcrastinationProfile.PERFECTIONIST;
+        }
+
+        user.setQuestionnaireCompleted(true);
+        user.setProcrastinationProfile(profile);
+
+        User savedUser = userRepository.save(user);
+        return userMapper.toResponse(savedUser);
+    }
+
     @Transactional
     public UserResponse submitQuestionnaire(User user, Map<String, Integer> answers) {
         ProcrastinationProfile profile = profileCalculator.calculate(answers);

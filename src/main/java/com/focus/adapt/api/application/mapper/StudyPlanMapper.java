@@ -22,7 +22,7 @@ public interface StudyPlanMapper {
     @Mapping(target = "studyTasks", ignore = true)
     StudyPlan toEntity(StudyPlanRequest request);
 
-    @Mapping(target = "tasks", source = "studyTasks")
+    @Mapping(target = "tasks", source = "studyTasks", qualifiedByName = "metadataOnly")
     @Mapping(target = "totalTasks", ignore = true)
     @Mapping(target = "completedTasks", ignore = true)
     @Mapping(target = "progress", ignore = true)

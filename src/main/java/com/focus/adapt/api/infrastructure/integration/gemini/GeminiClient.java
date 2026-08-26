@@ -1,5 +1,6 @@
 package com.focus.adapt.api.infrastructure.integration.gemini;
 
+import java.util.Base64;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -8,6 +9,8 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.focus.adapt.api.infrastructure.exception.BusinessException;
 
 import jakarta.annotation.PostConstruct;
@@ -33,7 +36,28 @@ public class GeminiClient {
      * Sends a generation prompt request to the Gemini API with built-in retries, timeouts, and rate limiting.
      */
     public String generateContent(String prompt) {
-        GeminiBody requestBody = new GeminiBody(geminiConfig.getModel(), prompt);
+        return executeRequest(prompt);
+    }
+
+    /**
+     * Sends a generation prompt with an attached PDF document (inline Base64) to the Gemini API.
+     */
+    public String generateContentWithPdf(String prompt, byte[] pdfBytes) {
+        if (pdfBytes == null || pdfBytes.length == 0) {
+            return generateContent(prompt);
+        }
+
+        String base64Pdf = Base64.getEncoder().encodeToString(pdfBytes);
+        List<InputPart> inputParts = List.of(
+                InputPart.document(base64Pdf, "application/pdf"),
+                InputPart.text(prompt)
+        );
+
+        return executeRequest(inputParts);
+    }
+
+    private String executeRequest(Object input) {
+        GeminiBody requestBody = new GeminiBody(geminiConfig.getModel(), input);
 
         int attempts = 0;
         int maxAttempts = geminiConfig.getMaxRetries() + 1;
@@ -45,7 +69,7 @@ public class GeminiClient {
                 // Apply rate limiting before making the HTTP call
                 rateLimiter.acquire();
 
-                log.info("GeminiClient: Sending prompt to Gemini API (Attempt {}/{})", attempts, maxAttempts);
+                log.info("GeminiClient: Sending request to Gemini API (Attempt {}/{})", attempts, maxAttempts);
 
                 GeminiResponse response = geminiRestClient.post()
                         .contentType(MediaType.APPLICATION_JSON)
@@ -53,7 +77,7 @@ public class GeminiClient {
                         .retrieve()
                         .body(GeminiResponse.class);
 
-                log.info("GeminiClient: Received response from Gemini API (status={})", 
+                log.info("GeminiClient: Received response from Gemini API (status={})",
                         response != null ? response.status() : "null");
 
                 if (response == null || response.steps() == null || response.steps().isEmpty()) {
@@ -113,9 +137,28 @@ public class GeminiClient {
         return statusCode == 429 || (statusCode >= 500 && statusCode < 600);
     }
 
-    // Structured JSON Response records (novo formato da API Gemini)
+    // Structured JSON Response & Request records (novo formato da API Gemini)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record InputPart(
+            String type,
+            String data,
+            @JsonProperty("mime_type") String mimeType,
+            String text
+    ) {
+        public static InputPart text(String text) {
+            return new InputPart("text", null, null, text);
+        }
+
+        public static InputPart document(String base64Data, String mimeType) {
+            return new InputPart("document", base64Data, mimeType, null);
+        }
+    }
+
     private record GeminiResponse(String id, String status, List<Step> steps) {}
     private record Step(String type, List<ContentPart> content) {}
     private record ContentPart(String type, String text) {}
-    private record GeminiBody(String model, String input) {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private record GeminiBody(String model, Object input) {}
 }
+

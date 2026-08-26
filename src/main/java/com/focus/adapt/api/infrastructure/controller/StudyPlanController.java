@@ -1,22 +1,15 @@
 package com.focus.adapt.api.infrastructure.controller;
 
-import com.focus.adapt.api.application.dto.StudyPlanGenerateRequest;
-import com.focus.adapt.api.application.dto.StudyPlanRequest;
-import com.focus.adapt.api.application.dto.StudyPlanResponse;
-import com.focus.adapt.api.application.service.StudyPlanService;
-import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
-import com.focus.adapt.api.infrastructure.exception.ApiResponse;
-import com.focus.adapt.api.infrastructure.security.CurrentUser;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +20,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.UUID;
+import com.focus.adapt.api.application.dto.StudyPlanGenerateRequest;
+import com.focus.adapt.api.application.dto.StudyPlanRequest;
+import com.focus.adapt.api.application.dto.StudyPlanResponse;
+import com.focus.adapt.api.application.service.StudyPlanService;
+import com.focus.adapt.api.domain.entity.User;
+import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
+import com.focus.adapt.api.infrastructure.exception.ApiResponse;
+import com.focus.adapt.api.infrastructure.security.CurrentUser;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/v1/study-plans")
@@ -47,6 +54,25 @@ public class StudyPlanController {
     ) {
         StudyPlanResponse generated = studyPlanService.generateStudyPlan(request, user);
         ApiResponse<StudyPlanResponse> response = ApiResponse.success(generated, "Study plan generated successfully");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping(value = "/upload-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload a PDF document and generate a study plan using AI")
+    public ResponseEntity<ApiResponse<StudyPlanResponse>> uploadPdf(
+            @RequestParam MultipartFile file,
+            @RequestParam(required = false) String topic,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) Integer availableMinutesPerDay,
+            @RequestParam(required = false) Integer availableHoursPerDay,
+            @RequestParam(required = false) List<String> availableDays,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @CurrentUser User user
+    ) {
+        StudyPlanResponse generated = studyPlanService.generateStudyPlanFromPdf(
+                file, topic, description, availableMinutesPerDay, availableHoursPerDay, availableDays, startDate, user
+        );
+        ApiResponse<StudyPlanResponse> response = ApiResponse.success(generated, "Study plan generated from PDF successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

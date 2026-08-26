@@ -69,9 +69,9 @@ public class UserController {
     @Operation(summary = "Submit questionnaire answers and calculate procrastination profile")
     public ResponseEntity<ApiResponse<UserResponse>> submitQuestionnaire(
             @CurrentUser User currentUser,
-            @RequestBody QuestionnaireSubmitRequest request
+            @RequestBody(required = false) QuestionnaireSubmitRequest request
     ) {
-        UserResponse updated = userService.submitQuestionnaire(currentUser, request.getAnswers());
+        UserResponse updated = userService.submitQuestionnaire(currentUser, request);
         return ResponseEntity.ok(ApiResponse.success(updated, "Questionnaire submitted successfully"));
     }
 

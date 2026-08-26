@@ -108,4 +108,41 @@ class PromptBuilderTest {
         assertTrue(prompt.contains("QUIZ"));
         assertTrue(prompt.contains("STIMULUS_SEEKER"));
     }
+
+    @Test
+    void shouldBuildStudyPlanFromPdfPromptForPerfectionist() {
+        String prompt = builder.buildStudyPlanFromPdfPrompt(
+                "Redes de Computadores",
+                "Capítulos 1 ao 4",
+                30,
+                "MONDAY,WEDNESDAY,FRIDAY",
+                "2026-09-01",
+                ProcrastinationProfile.PERFECTIONIST
+        );
+
+        assertTrue(prompt.contains("attached PDF document"));
+        assertTrue(prompt.contains("Redes de Computadores"));
+        assertTrue(prompt.contains("PERFECTIONIST"));
+        assertTrue(prompt.contains("scheduledDate"));
+        assertTrue(prompt.contains("30 minutes"));
+        assertTrue(prompt.contains("gradual progression"));
+    }
+
+    @Test
+    void shouldBuildStudyPlanFromPdfPromptForStimulusSeeker() {
+        String prompt = builder.buildStudyPlanFromPdfPrompt(
+                "Estruturas de Dados",
+                "Árvores e Grafos",
+                60,
+                "TUESDAY,THURSDAY",
+                "2026-09-01",
+                ProcrastinationProfile.STIMULUS_SEEKER
+        );
+
+        assertTrue(prompt.contains("attached PDF document"));
+        assertTrue(prompt.contains("Estruturas de Dados"));
+        assertTrue(prompt.contains("STIMULUS_SEEKER"));
+        assertTrue(prompt.contains("1 hour (60 minutes)"));
+        assertTrue(prompt.contains("alternating between foundational theory and immediate practical applications"));
+    }
 }

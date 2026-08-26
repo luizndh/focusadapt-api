@@ -11,21 +11,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.focus.adapt.api.application.dto.BadgeResponse;
 import com.focus.adapt.api.application.dto.DashboardResponse;
 import com.focus.adapt.api.application.dto.NotificationResponse;
-import com.focus.adapt.api.application.dto.StudyPlanResponse;
 import com.focus.adapt.api.application.dto.UserMissionResponse;
 import com.focus.adapt.api.application.mapper.BadgeMapper;
 import com.focus.adapt.api.application.mapper.MissionMapper;
 import com.focus.adapt.api.application.mapper.NotificationMapper;
-import com.focus.adapt.api.application.mapper.StudyPlanMapper;
 import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudyMode;
-import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
 import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
 import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
 import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
-import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserRepository;
@@ -37,13 +33,11 @@ import lombok.RequiredArgsConstructor;
 public class DashboardService {
 
     private final UserRepository userRepository;
-    private final StudyPlanRepository studyPlanRepository;
     private final StudySessionRepository studySessionRepository;
     private final UserMissionRepository userMissionRepository;
     private final UserAchievementRepository userAchievementRepository;
     private final NotificationRepository notificationRepository;
 
-    private final StudyPlanMapper studyPlanMapper;
     private final MissionMapper missionMapper;
     private final BadgeMapper badgeMapper;
     private final NotificationMapper notificationMapper;
@@ -52,32 +46,25 @@ public class DashboardService {
     public DashboardResponse getDashboard(User user) {
         User currentUser = user.getId() != null ? userRepository.findById(user.getId()).orElse(user) : user;
 
-        // 1. Active study plan
-        StudyPlanResponse activePlan = studyPlanRepository.findByUserAndStatus(currentUser, StudyPlanStatus.ACTIVE, PageRequest.of(0, 1))
-                .getContent().stream()
-                .map(studyPlanMapper::toResponse)
-                .findFirst()
-                .orElse(null);
-
-        // 2. Active missions
+        // 1. Active missions
         List<UserMissionResponse> activeMissions = userMissionRepository.findByUserAndStatus(currentUser, UserMissionStatus.IN_PROGRESS)
                 .stream()
                 .map(missionMapper::toResponse)
                 .collect(Collectors.toList());
 
-        // 3. Unlocked badges
+        // 2. Unlocked badges
         List<BadgeResponse> unlockedBadges = userAchievementRepository.findByUser(currentUser, Pageable.unpaged())
                 .getContent().stream()
                 .map(ua -> badgeMapper.toResponse(ua.getBadge()))
                 .collect(Collectors.toList());
 
-        // 4. Recent notifications
+        // 3. Recent notifications
         List<NotificationResponse> recentNotifications = notificationRepository.findByUserAndIsRead(currentUser, false, PageRequest.of(0, 5))
                 .getContent().stream()
                 .map(notificationMapper::toResponse)
                 .collect(Collectors.toList());
 
-        // 5. Study stats from StudySessions
+        // 4. Study stats from StudySessions
         List<StudySession> completedSessions = studySessionRepository.findByUserAndStatus(currentUser, StudySessionStatus.COMPLETED, Pageable.unpaged())
                 .getContent();
 
@@ -96,7 +83,6 @@ public class DashboardService {
                 .xpPoints(currentUser.getPoints())
                 .streak(currentUser.getStreak())
                 .procrastinationProfile(currentUser.getProcrastinationProfile() != null ? currentUser.getProcrastinationProfile().name() : null)
-                .activeStudyPlan(activePlan)
                 .activeMissions(activeMissions)
                 .unlockedBadges(unlockedBadges)
                 .recentNotifications(recentNotifications)

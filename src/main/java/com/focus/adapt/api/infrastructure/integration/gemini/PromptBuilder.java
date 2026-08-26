@@ -121,6 +121,131 @@ public class PromptBuilder {
         );
     }
 
+    /**
+     * Constrói o prompt para geração de plano de estudos a partir de um documento PDF.
+     * Reutiliza as mesmas regras acadêmicas, de duração (15-45m), perfil comportamental e calendário.
+     */
+    public String buildStudyPlanFromPdfPrompt(String topicHint, String description, int availableMinutesPerDay,
+                                              String availableDays, String startDate,
+                                              ProcrastinationProfile profileType) {
+        String profileInstructions = getPlanProfileInstructions(profileType);
+        String dailyTimeFormatted = formatDailyStudyTime(availableMinutesPerDay);
+
+        return String.format("""
+                You are an expert academic curriculum designer and study planner analyzing the attached PDF document.
+
+                Your goal is to extract the core subject matter, chapters, concepts, and learning objectives from the attached PDF document and organize them into a personalized, high-quality study curriculum for the student.
+
+                ==================================================
+                PDF CONTENT ANALYSIS INSTRUCTIONS
+                ==================================================
+
+                * Analyze the text, visual structure, chapters, sections, diagrams, and tables of the attached PDF.
+                * Structure the study plan following the logical and progressive curriculum presented in the PDF.
+                * If a topic hint is provided, use it to prioritize relevant sections; otherwise, determine the title from the document.
+
+                ==================================================
+                FUNDAMENTAL ARCHITECTURE & TASK DEFINITION
+                ==================================================
+
+                * The STUDY PLAN represents the overall subject covered in the PDF.
+                * Each STUDY TASK represents a single, coherent ACADEMIC TOPIC or CONCEPT extracted from the PDF.
+                * A STUDY TASK is NOT an exercise, challenge, quiz, mission, reward, or gamification activity.
+                * The title of each StudyTask must describe ONLY the academic concept itself (e.g. "Estruturas de Repetição", NOT "Capítulo 1", NOT "Quiz").
+                * Do NOT put "Day 1", "Day 2", dates, weekdays, or motivational slogans in StudyTask titles or descriptions.
+                * Pedagogical activities (quizzes, exercises, checkpoints, challenges) will be generated later inside ContentBlocks, NOT in the plan definition.
+
+                Student Information:
+                * Topic Hint: "%s"
+                * Additional context: "%s"
+                * Available study time per day: %s
+                * Available days of the week: %s
+                * Start date: %s
+                * Procrastination Profile: %s
+
+                ==================================================
+                PROFILE-SPECIFIC CURRICULUM STRUCTURING
+                ==================================================
+
+                Both profiles study the same fundamental academic concepts. The curriculum structure must adapt to the student's behavioral characteristics:
+
+                %s
+
+                ==================================================
+                STUDY TASK DURATION & GRANULARITY
+                ==================================================
+
+                * Every StudyTask must represent approximately 15 to 45 minutes of focused study.
+                * NEVER create massive tasks of hundreds of minutes.
+                * If a chapter or concept in the PDF is broad, divide it into logically cohesive sub-concepts.
+                * Do not artificially fragment a single simple concept into multiple trivial tasks.
+
+                ==================================================
+                SCHEDULE & CALENDAR RULES
+                ==================================================
+
+                * Distribute the study tasks strictly according to the student's declared parameters.
+                * The first task must be scheduled on or after the declared start date, matching one of the student's available days of the week.
+                * Assign a valid, sequential `scheduledDate` (in YYYY-MM-DD format) to each StudyTask, scheduling tasks ONLY on the student's available days of the week.
+                * Do NOT exceed the declared daily study time on any single calendar date.
+                * Set the overall plan `startDate` (date of the first task) and `endDate` (date of the final task) accurately based on the schedule.
+
+                ==================================================
+                SUBJECT CATEGORY SELECTION
+                ==================================================
+
+                The "category" field must be chosen from the following controlled list:
+                * Programming
+                * Backend Development
+                * Frontend Development
+                * Mobile Development
+                * Databases
+                * DevOps
+                * Cloud Computing
+                * Data Science
+                * Artificial Intelligence
+                * Mathematics
+                * Physics
+                * Languages
+                * Business
+                * Other
+
+                ==================================================
+                OUTPUT FORMAT
+                ==================================================
+
+                Return ONLY valid JSON without Markdown code fences (no ```json).
+                Do not include explanations or text outside the JSON object.
+
+                Schema:
+                {
+                    "title": "Topic Name Extracted From PDF",
+                    "description": "Overview of the study plan curriculum based on the PDF content.",
+                    "category": "One Category From List",
+                    "startDate": "YYYY-MM-DD",
+                    "endDate": "YYYY-MM-DD",
+                    "totalEstimatedDurationMinutes": 180,
+                    "tasks": [
+                        {
+                            "title": "Academic Concept Title",
+                            "description": "Brief explanation of the academic topic covered in the PDF.",
+                            "order": 1,
+                            "estimatedDurationMinutes": 30,
+                            "scheduledDate": "YYYY-MM-DD"
+                        }
+                    ]
+                }
+                """,
+            topicHint != null ? topicHint : "Extracted from PDF",
+            description != null ? description : "Based on attached PDF document",
+            dailyTimeFormatted,
+            availableDays != null ? availableDays : "Any day",
+            startDate != null ? startDate : "Tomorrow",
+            profileType.name(),
+            profileInstructions
+        );
+    }
+
     private String formatDailyStudyTime(int minutes) {
         if (minutes < 60) {
             return minutes + " minutes";

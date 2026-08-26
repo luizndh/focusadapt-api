@@ -1,7 +1,10 @@
 package com.focus.adapt.api.application.service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -102,6 +105,58 @@ public class StudyPlanService {
                 user
         );
 
+        String daysFormatted = request.getFormattedAvailableDays();
+        return saveAiStudyPlan(aiResponse, request.getTopic(), request.getDescription(), effectiveMinutes, daysFormatted, effectiveStart, user);
+    }
+
+    @Transactional
+    public StudyPlanResponse generateStudyPlanFromPdf(MultipartFile file, String topic, String description,
+                                                      Integer availableMinutesPerDay, Integer availableHoursPerDay,
+                                                      List<String> availableDays, LocalDate startDate, User user) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("A valid PDF file is required");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".pdf")) {
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {
+                throw new BusinessException("Only PDF files are supported");
+            }
+        }
+
+        byte[] pdfBytes;
+        try {
+            pdfBytes = file.getBytes();
+        } catch (java.io.IOException e) {
+            throw new BusinessException("Failed to read PDF file: " + e.getMessage());
+        }
+
+        int effectiveMinutes = 60;
+        if (availableMinutesPerDay != null && availableMinutesPerDay >= 15) {
+            effectiveMinutes = availableMinutesPerDay;
+        } else if (availableHoursPerDay != null && availableHoursPerDay > 0) {
+            effectiveMinutes = availableHoursPerDay * 60;
+        }
+
+        LocalDate effectiveStart = startDate != null ? startDate : LocalDate.now().plusDays(1);
+        String effectiveTopic = (topic != null && !topic.isBlank())
+                ? topic
+                : (originalFilename != null ? originalFilename.replaceFirst("(?i)\\.pdf$", "") : "Document Study Plan");
+
+        AiStudyPlanResponse aiResponse = aiService.generateStudyPlanFromPdf(
+                pdfBytes, effectiveTopic, description, effectiveMinutes, availableDays, effectiveStart, user
+        );
+
+        String daysFormatted = (availableDays != null && !availableDays.isEmpty())
+                ? String.join(",", availableDays)
+                : "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY";
+
+        return saveAiStudyPlan(aiResponse, effectiveTopic, description, effectiveMinutes, daysFormatted, effectiveStart, user);
+    }
+
+    private StudyPlanResponse saveAiStudyPlan(AiStudyPlanResponse aiResponse, String fallbackTopic, String fallbackDesc,
+                                              int effectiveMinutes, String daysFormatted, LocalDate effectiveStart, User user) {
         LocalDate planStartDate = aiResponse.getStartDate() != null ? aiResponse.getStartDate() : effectiveStart;
         LocalDate planEndDate = aiResponse.getEndDate() != null ? aiResponse.getEndDate() : planStartDate.plusDays(14);
 
@@ -113,14 +168,14 @@ public class StudyPlanService {
         }
 
         StudyPlan plan = StudyPlan.builder()
-                .title(aiResponse.getTitle() != null && !aiResponse.getTitle().isBlank() ? aiResponse.getTitle() : request.getTopic())
-                .description(aiResponse.getDescription() != null ? aiResponse.getDescription() : request.getDescription())
-                .category(aiResponse.getCategory() != null ? aiResponse.getCategory() : "Geral")
+                .title(aiResponse.getTitle() != null && !aiResponse.getTitle().isBlank() ? aiResponse.getTitle() : fallbackTopic)
+                .description(aiResponse.getDescription() != null ? aiResponse.getDescription() : fallbackDesc)
+                .category(aiResponse.getCategory() != null ? aiResponse.getCategory() : "Other")
                 .startDate(planStartDate)
                 .endDate(planEndDate)
                 .totalEstimatedDurationMinutes(totalMinutes)
                 .availableHoursPerDay((effectiveMinutes + 59) / 60)
-                .availableDays(request.getFormattedAvailableDays())
+                .availableDays(daysFormatted)
                 .status(StudyPlanStatus.ACTIVE)
                 .user(user)
                 .build();

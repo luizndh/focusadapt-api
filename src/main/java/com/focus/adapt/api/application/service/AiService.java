@@ -45,6 +45,25 @@ public class AiService {
         return responseParser.parseStudyPlanWithTasks(rawResponse);
     }
 
+    public AiStudyPlanResponse generateStudyPlanFromPdf(byte[] pdfBytes, String topicHint, String description,
+                                                        int availableMinutesPerDay, List<String> availableDays,
+                                                        LocalDate startDate, User user) {
+        log.info("AiService: Generating study plan from PDF ({} bytes, {} minutes/day)",
+                pdfBytes != null ? pdfBytes.length : 0, availableMinutesPerDay);
+
+        ProcrastinationProfile profileType = resolveProfileType(user);
+        String daysFormatted = availableDays != null ? String.join(", ", availableDays) : null;
+        String startDateStr = startDate != null ? startDate.toString() : null;
+
+        String prompt = promptBuilder.buildStudyPlanFromPdfPrompt(
+                topicHint, description, availableMinutesPerDay, daysFormatted, startDateStr, profileType
+        );
+
+        String rawResponse = geminiClient.generateContentWithPdf(prompt, pdfBytes);
+        log.debug("Raw response from Gemini for PDF: {}", rawResponse);
+        return responseParser.parseStudyPlanWithTasks(rawResponse);
+    }
+
     /**
      * ETAPA 1: Gera a estrutura dos ContentBlocks para a StudyTask.
      */

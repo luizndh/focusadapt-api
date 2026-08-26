@@ -11,7 +11,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -21,14 +20,11 @@ import com.focus.adapt.api.application.dto.DashboardResponse;
 import com.focus.adapt.api.application.mapper.BadgeMapper;
 import com.focus.adapt.api.application.mapper.MissionMapper;
 import com.focus.adapt.api.application.mapper.NotificationMapper;
-import com.focus.adapt.api.application.mapper.StudyPlanMapper;
 import com.focus.adapt.api.domain.entity.User;
-import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
 import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserRole;
 import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
-import com.focus.adapt.api.infrastructure.repository.StudyPlanRepository;
 import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
@@ -39,9 +35,6 @@ class DashboardServiceTest {
 
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private StudyPlanRepository studyPlanRepository;
 
     @Mock
     private StudySessionRepository studySessionRepository;
@@ -56,9 +49,6 @@ class DashboardServiceTest {
     private NotificationRepository notificationRepository;
 
     @Mock
-    private StudyPlanMapper studyPlanMapper;
-
-    @Mock
     private MissionMapper missionMapper;
 
     @Mock
@@ -66,7 +56,6 @@ class DashboardServiceTest {
 
     @Mock
     private NotificationMapper notificationMapper;
-
 
     @InjectMocks
     private DashboardService dashboardService;
@@ -86,8 +75,6 @@ class DashboardServiceTest {
 
     @Test
     void shouldGetDashboardSuccessfully() {
-        when(studyPlanRepository.findByUserAndStatus(any(User.class), eq(StudyPlanStatus.ACTIVE), any(Pageable.class)))
-                .thenReturn(Page.empty());
         when(userMissionRepository.findByUserAndStatus(any(User.class), eq(UserMissionStatus.IN_PROGRESS)))
                 .thenReturn(Collections.emptyList());
         when(userAchievementRepository.findByUser(any(User.class), any(Pageable.class)))
@@ -103,7 +90,5 @@ class DashboardServiceTest {
         assertEquals("Test User", response.getUserName());
         assertEquals(100, response.getXpPoints());
         assertEquals(5, response.getStreak());
-
-        verify(studyPlanRepository).findByUserAndStatus(any(User.class), eq(StudyPlanStatus.ACTIVE), any(Pageable.class));
     }
 }

@@ -18,7 +18,6 @@ public class DashboardResponse {
     private int xpPoints;
     private int streak;
     private String procrastinationProfile;
-    private StudyPlanResponse activeStudyPlan;
     private List<UserMissionResponse> activeMissions;
     private List<BadgeResponse> unlockedBadges;
     private List<NotificationResponse> recentNotifications;
