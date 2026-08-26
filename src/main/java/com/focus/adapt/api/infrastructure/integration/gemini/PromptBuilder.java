@@ -2,59 +2,74 @@ package com.focus.adapt.api.infrastructure.integration.gemini;
 
 import org.springframework.stereotype.Component;
 
+import com.focus.adapt.api.domain.entity.enums.ContentBlockType;
 import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile;
 
 @Component
 public class PromptBuilder {
 
-    public String buildStudyPlanPrompt(String category, String description, int hoursPerDay,
+    public String buildStudyPlanPrompt(String category, String description, int availableMinutesPerDay,
                                        String availableDays, String startDate,
                                        ProcrastinationProfile profileType) {
         String profileInstructions = getPlanProfileInstructions(profileType);
+        String dailyTimeFormatted = formatDailyStudyTime(availableMinutesPerDay);
 
         return String.format("""
                 You are an expert academic curriculum designer and study planner.
 
-                Your goal is to create a personalized study curriculum for the student.
+                Your goal is to create a personalized, high-quality study curriculum for the student.
 
-                The study plan represents a structured path for learning the MAIN TOPIC.
-
-                IMPORTANT DISTINCTION:
+                ==================================================
+                FUNDAMENTAL ARCHITECTURE & TASK DEFINITION
+                ==================================================
 
                 * The STUDY PLAN represents the overall subject the student wants to learn.
-                * Each STUDY TASK represents one academic topic or concept within that subject.
-                * A STUDY TASK is NOT an exercise, challenge, quiz, mission, reward, or study activity.
-                * Motivational strategies and activities must not be placed in the StudyTask title or description.
-                * Those strategies will be applied later when the student studies the task.
+                * Each STUDY TASK represents a single, coherent ACADEMIC TOPIC or CONCEPT within that subject.
+                * A STUDY TASK is NOT an exercise, challenge, quiz, mission, reward, or gamification activity.
+                * The title of each StudyTask must describe ONLY the academic concept itself (e.g. "Filtragem com filter()", NOT "Quiz de filter()", NOT "Desafio 1").
+                * Do NOT put "Day 1", "Day 2", dates, weekdays, or motivational slogans in StudyTask titles or descriptions.
+                * Pedagogical activities (quizzes, exercises, checkpoints, challenges) will be generated later inside ContentBlocks, NOT in the plan definition.
 
-                Student information:
+                Student Information:
+                * Main topic: "%s"
+                * Additional context: "%s"
+                * Available study time per day: %s
+                * Available days of the week: %s
+                * Start date: %s
+                * Procrastination Profile: %s
 
-                Main topic: "%s"
-                Additional context: "%s"
-                Available hours per day: %d
-                Available days: %s
-                Start date: %s
+                ==================================================
+                PROFILE-SPECIFIC CURRICULUM STRUCTURING
+                ==================================================
 
-                Student procrastination profile: %s
+                Both profiles study the same fundamental academic concepts. The curriculum structure must adapt to the student's behavioral characteristics:
 
                 %s
 
                 ==================================================
-                STUDY PLAN RULES
-                ================
+                STUDY TASK DURATION & GRANULARITY
+                ==================================================
 
-                1. The StudyPlan title must be the MAIN TOPIC itself.
+                * Every StudyTask must represent approximately 15 to 45 minutes of focused study.
+                * NEVER create massive tasks of hundreds of minutes.
+                * If a concept is too broad, divide it into logically cohesive sub-concepts.
+                * Do not artificially fragment a single simple concept into multiple trivial tasks.
 
-                Example:
-                Input topic: "Java Streams"
-                Plan title: "Java Streams"
+                ==================================================
+                SCHEDULE & CALENDAR RULES
+                ==================================================
 
-                Do not add motivational phrases, dates, difficulty labels, or profile-specific wording to the title.
+                * Distribute the study tasks strictly according to the student's declared parameters.
+                * The first task must be scheduled on or after the declared start date, matching one of the student's available days of the week.
+                * Assign a valid, sequential `scheduledDate` (in YYYY-MM-DD format) to each StudyTask, scheduling tasks ONLY on the student's available days of the week.
+                * Do NOT exceed the declared daily study time on any single calendar date.
+                * Set the overall plan `startDate` (date of the first task) and `endDate` (date of the final task) accurately based on the schedule.
 
-                2. The StudyPlan "category" field must represent a BROAD SUBJECT CATEGORY useful for grouping different study plans.
+                ==================================================
+                SUBJECT CATEGORY SELECTION
+                ==================================================
 
-                Choose exactly ONE category from:
-
+                The "category" field must be chosen from the following controlled list:
                 * Programming
                 * Backend Development
                 * Frontend Development
@@ -70,139 +85,35 @@ public class PromptBuilder {
                 * Business
                 * Other
 
-                Example:
-                "Java Streams" -> "Programming"
-                "Spring Boot" -> "Backend Development"
-                "PostgreSQL" -> "Databases"
-
-                Do not create a new category unless none of the provided categories are appropriate.
-
-                3. The description must explain what the student will learn and what the plan covers.
-
-                4. Break the main topic into logically ordered academic concepts.
-
-                5. Each StudyTask must represent ONE coherent concept, topic, or lesson.
-
-                6. StudyTasks must follow a logical learning progression from fundamentals to more advanced concepts.
-
-                7. Do NOT put "Day 1", "Day 2", dates, weekdays, or schedule information in StudyTask titles.
-
-                8. Do NOT put exercises, challenges, quizzes, missions, rewards, or gamification mechanics in StudyTask titles or descriptions.
-
-                9. Avoid overlapping tasks.
-
-                10. Avoid tasks that are too broad.
-
-                Bad:
-                "Learn Java Streams"
-
-                Good:
-                "Stream Pipelines"
-                "Intermediate and Terminal Operations"
-                "Filtering with filter()"
-                "Mapping with map()"
-                "Flattening with flatMap()"
-                "Reduction with reduce()"
-                "Collectors"
-                "Parallel Streams"
-
-                11. The number of tasks must be appropriate for the available study time.
-
-                12. Do not artificially create many small tasks only to fill the schedule.
-
-                13. Do not merge unrelated concepts simply to reduce the number of tasks.
-
-                ==================================================
-                PERSONALIZATION RULES
-                =====================
-
-                The student's procrastination profile affects HOW the curriculum should be structured, but NOT what the academic topics are.
-
-                PERFECTIONIST:
-
-                * Prefer smaller and clearly scoped academic topics.
-                * Create a gradual progression.
-                * Avoid tasks that combine too many concepts.
-                * Prefer frequent milestones and clear completion points.
-                * Do not make tasks artificially difficult.
-                * Do not add motivational slogans to task titles.
-
-                STIMULUS_SEEKER:
-
-                * Keep tasks focused and relatively short.
-                * Prefer a varied sequence of related concepts.
-                * Avoid long theoretical blocks when the subject allows practical progression.
-                * Alternate conceptual topics and practical topics where appropriate.
-                * Do not turn the StudyTask itself into a challenge or game.
-                * Challenges, quizzes, rewards, and dynamic activities must be generated later during the study session, not inside the StudyTask definition.
-
-                ==================================================
-                SCHEDULE RULES
-                ==============
-
-                Use the student's available days and hours per day to determine:
-
-                * number of tasks;
-                * estimated duration of each task;
-                * overall start and end dates.
-
-                The schedule must fit within the user's declared availability.
-
-                Do not assign more study time than the user has available.
-
-                Do not assume availability on days that were not provided.
-
-                ==================================================
-                STUDY TASK INFORMATION
-                ======================
-
-                For every StudyTask provide:
-
-                * title
-                * description
-                * order
-                * estimatedDurationMinutes
-
-                The title must identify the academic concept itself.
-
-                The description must briefly explain what the student will learn.
-
                 ==================================================
                 OUTPUT FORMAT
-                =============
+                ==================================================
 
-                Return ONLY valid JSON.
-                Do not use Markdown code fences (e.g. ```json).
-                Do not include explanations outside the JSON.
+                Return ONLY valid JSON without Markdown code fences (no ```json).
+                Do not include explanations or text outside the JSON object.
 
                 Schema:
-
                 {
-                    "title": "Java Streams",
-                    "description": "A structured study plan for mastering Java Streams from basics to advanced collectors.",
-                    "category": "Programming",
+                    "title": "Topic Name",
+                    "description": "Overview of the study plan curriculum.",
+                    "category": "One Category From List",
                     "startDate": "YYYY-MM-DD",
                     "endDate": "YYYY-MM-DD",
-                    "totalEstimatedMinutes": 180,
+                    "totalEstimatedDurationMinutes": 180,
                     "tasks": [
                         {
-                            "title": "Stream Pipelines and Sources",
-                            "description": "Understand stream creation from collections and the lifecycle of source, intermediate, and terminal operations.",
+                            "title": "Academic Concept Title",
+                            "description": "Brief explanation of the academic topic covered.",
                             "order": 1,
-                            "estimatedDurationMinutes": 25
-                        },
-                        {
-                            "title": "Filtering and Slicing with filter, distinct, limit",
-                            "description": "Learn how to filter elements and slice stream data using core intermediate operations.",
-                            "order": 2,
-                            "estimatedDurationMinutes": 20
+                            "estimatedDurationMinutes": 30,
+                            "scheduledDate": "YYYY-MM-DD"
                         }
                     ]
                 }
                 """,
             category,
             description != null ? description : "N/A",
-            hoursPerDay,
+            dailyTimeFormatted,
             availableDays != null ? availableDays : "Any day",
             startDate != null ? startDate : "Tomorrow",
             profileType.name(),
@@ -210,137 +121,257 @@ public class PromptBuilder {
         );
     }
 
-    public String buildStudyTaskContentPrompt(String taskTitle, String taskDescription,
-                                               String planTitle,
-                                               ProcrastinationProfile profileType) {
-        String profileInstructions = getContentProfileInstructions(profileType);
+    private String formatDailyStudyTime(int minutes) {
+        if (minutes < 60) {
+            return minutes + " minutes";
+        }
+        int hours = minutes / 60;
+        int rem = minutes % 60;
+        if (rem == 0) {
+            return hours + (hours == 1 ? " hour" : " hours") + " (" + minutes + " minutes)";
+        }
+        return hours + (hours == 1 ? " hour and " : " hours and ") + rem + " minutes (" + minutes + " minutes total)";
+    }
+
+    /**
+     * ETAPA 1: Gera a estrutura pedagógica de ContentBlocks para uma StudyTask (sem gerar o texto completo).
+     */
+    public String buildTaskBlocksStructurePrompt(String taskTitle, String taskDescription,
+                                                 String planTitle, ProcrastinationProfile profileType) {
+        String structureGuidelines = getBlocksStructureProfileGuidelines(profileType);
 
         return String.format("""
-                You are an expert educator creating high-quality, standalone educational lessons for an e-learning mobile application.
+                You are an expert instructional designer structuring the learning blocks (ContentBlocks) for a specific academic study task.
 
-                Study Plan: "%s"
-                Task Title: "%s"
-                Task Description: "%s"
-                Student Procrastination Profile: %s
+                Context:
+                * Study Plan: "%s"
+                * Academic StudyTask: "%s"
+                * Task Description: "%s"
+                * Student Procrastination Profile: %s
+
+                ==================================================
+                CONTENT BLOCK ARCHITECTURE
+                ==================================================
+
+                A StudyTask represents what the student learns. ContentBlocks represent how the lesson is delivered in bite-sized chunks.
+
+                Possible Block Types:
+                * EXPLANATION: Conceptual explanation, theories, or principles.
+                * EXAMPLE: Practical code examples, walk-throughs, or concrete illustrations.
+                * GUIDED_EXERCISE: Step-by-step guided practice with solutions.
+                * QUIZ: Quick questions with immediate feedback.
+                * FLASHCARD: Active recall question/answer pairs.
+                * CHALLENGE: Micro-challenge or problem to solve.
+                * CHECKPOINT: Milestone self-check to confirm understanding.
+                * SUMMARY: Key takeaways and wrap-up.
+
+                ==================================================
+                PROFILE-SPECIFIC STRUCTURING STRATEGY
+                ==================================================
 
                 %s
 
                 ==================================================
-                CRITICAL CONTENT AND FORMAT RULES
-                =================================
+                RULES
+                ==================================================
 
-                1. FORMAT: Return ONLY pure, well-structured Markdown in Portuguese (Brazil - pt-BR).
-                   Do NOT wrap in JSON. Do NOT include markdown code blocks around the entire text.
+                1. Each block should have an estimated duration of 5 to 10 minutes.
+                2. The titles of the blocks must be clear, engaging, and in Portuguese (pt-BR).
+                3. Do NOT generate the full lesson content text in this step. Only generate the block structure.
 
-                2. NATURE OF THE CONTENT:
-                   * This is a STATIC, STANDALONE LESSON read directly in the application screen.
-                   * The user is reading a textbook/article format. There is NO chat interface and NO conversational back-and-forth.
+                ==================================================
+                OUTPUT FORMAT
+                ==================================================
 
-                3. STRICT PROHIBITIONS (DO NOT VIOLATE):
-                   * NEVER use conversational phrases or chatbot-style dialogue (e.g., "Quer continuar agora ou fazer uma pausa?", "Se for continuar, peça...", "Pergunte-me se quiser...", "O que você achou?", "Espero que tenha gostado!", "Me diga se ficou com dúvida").
-                   * NEVER instruct the user to type messages, prompt the AI, or request additional code/examples.
-                   * NEVER leave lessons incomplete or dependent on future prompts. Everything needed must be self-contained in this lesson.
+                Return ONLY valid JSON (no markdown code fences).
 
-                4. REQUIRED LESSON STRUCTURE:
-                   The lesson MUST be thorough, clear, engaging, and structured with the following sections:
-
-                   # %s
-
-                   ## 1. Introdução e Objetivo
-                   Explain what this topic is, why it matters, and what the student will achieve by the end of this lesson.
-
-                   ## 2. Conceito Central
-                   Detailed, crystal-clear explanation of the core concept. Use analogies or bullet points where helpful.
-
-                   ## 3. Como Funciona na Prática (com exemplos)
-                   Provide complete, realistic, and concrete step-by-step examples. Explain what each key part of the code does.
-
-                   ## 4. Casos de Uso Comuns e Armadilhas
-                   Show real-world scenarios where this is used, along with common mistakes students make and how to avoid them.
-
-                   ## 5. Exercício Prático de Fixação
-                   Provide 1 practical challenge or question for the student to test their knowledge, followed immediately by the detailed solution and explanation inside a collapsible/clear solution block.
-
-                   ## 6. Resumo e Pontos-Chave
-                   A bulleted summary of the 3-5 most critical takeaways.
-
-                   ## 7. Dica de Ouro
-                   A valuable best-practice tip, mnemonic, or industry insight related to this topic.
-
-                5. READING TIME: The lesson should take approximately 10 to 15 minutes of focused reading and practice.
+                Schema:
+                {
+                    "blocks": [
+                        {
+                            "order": 1,
+                            "type": "EXPLANATION",
+                            "title": "Título do Bloco em Português",
+                            "estimatedMinutes": 5
+                        },
+                        {
+                            "order": 2,
+                            "type": "EXAMPLE",
+                            "title": "Título do Bloco em Português",
+                            "estimatedMinutes": 5
+                        }
+                    ]
+                }
                 """,
             planTitle,
             taskTitle,
             taskDescription != null ? taskDescription : "N/A",
             profileType.name(),
-            profileInstructions,
-            taskTitle
+            structureGuidelines
+        );
+    }
+
+    /**
+     * ETAPA 2: Gera o conteúdo em Markdown de um único ContentBlock sob demanda.
+     */
+    public String buildBlockContentPrompt(String planTitle, String taskTitle, String taskDescription,
+                                          String blockTitle, ContentBlockType blockType,
+                                          ProcrastinationProfile profileType) {
+        String typeGuidelines = getBlockTypeSpecificGuidelines(blockType);
+        String profilePedagogy = getBlockContentProfilePedagogy(profileType);
+
+        return String.format("""
+                You are an expert educator generating the content for a single, focused learning block (ContentBlock) in an e-learning application.
+
+                Lesson Context:
+                * Study Plan: "%s"
+                * StudyTask Topic: "%s"
+                * Task Description: "%s"
+                * ContentBlock Title: "%s"
+                * ContentBlock Type: %s
+                * Student Procrastination Profile: %s
+
+                ==================================================
+                BLOCK TYPE GUIDELINES: %s
+                ==================================================
+
+                %s
+
+                ==================================================
+                PROFILE PEDAGOGICAL STRATEGY: %s
+                ==================================================
+
+                %s
+
+                ==================================================
+                FORMAT & DELIVERY RULES
+                ==================================================
+
+                1. Output ONLY pure, well-formatted Markdown in Portuguese (Brazil - pt-BR).
+                2. Do NOT wrap in JSON. Do NOT include markdown code blocks around the entire output.
+                3. Start directly with `# %s`.
+                4. Be direct, clear, and high-value. This block should take approximately 5 to 10 minutes to read/complete.
+                5. NEVER use conversational chatbot phrases (e.g. "Espero que tenha gostado", "Me diga se tem dúvidas", "Quer continuar?").
+                """,
+            planTitle,
+            taskTitle,
+            taskDescription != null ? taskDescription : "N/A",
+            blockTitle,
+            blockType.name(),
+            profileType.name(),
+            blockType.name(),
+            typeGuidelines,
+            profileType.name(),
+            profilePedagogy,
+            blockTitle
         );
     }
 
     private String getPlanProfileInstructions(ProcrastinationProfile profileType) {
         return switch (profileType) {
             case PERFECTIONIST -> """
-                    Profile-specific planning guidelines:
-                    - Favor smaller, clearly defined tasks (15-25 minutes).
-                    - Establish a gradual learning curve without intimidating complexity.
-                    - Define precise, achievable learning outcomes for each task.""";
+                    PERFECTIONIST PROFILE CURRICULUM GUIDELINES:
+                    * The student experiences fear of failure, self-criticism, difficulty starting, and potential overwhelm from broad topics.
+                    * Structure the curriculum with a clear, gradual progression from fundamentals to advanced topics.
+                    * Define precise, clearly bounded academic scopes for each task so the student has clear endpoints.
+                    * Avoid combining multiple disparate learning objectives into a single StudyTask.
+                    * Keep individual task durations within 15 to 45 minutes to prevent cognitive fatigue and analysis paralysis.""";
             case STIMULUS_SEEKER -> """
-                    Profile-specific planning guidelines:
-                    - Keep tasks focused, varied, and direct (20-30 minutes).
-                    - Mix conceptual topics with practical application topics.
-                    - Avoid overly theoretical tasks; focus on applied knowledge.""";
+                    STIMULUS_SEEKER PROFILE CURRICULUM GUIDELINES:
+                    * The student experiences rapid boredom, seeks novelty, and responds strongly to frequent progress markers and practical application.
+                    * Keep tasks sharply focused on concrete concepts, alternating between foundational theory and immediate practical applications.
+                    * Avoid long consecutive blocks of purely abstract theory where practical progression is possible.
+                    * Maintain strict academic titles (e.g., 'Filtragem com filter()', never 'Quiz de filter()' or 'Jogo de Streams').
+                    * Keep individual task durations within 15 to 45 minutes with clear milestones.""";
         };
     }
 
-    private String getContentProfileInstructions(ProcrastinationProfile profileType) {
+    private String getBlocksStructureProfileGuidelines(ProcrastinationProfile profileType) {
         return switch (profileType) {
             case PERFECTIONIST -> """
-                    PERSONALIZED LEARNING STRATEGY — PERFECTIONIST
-
-                    The learner may struggle with fear of mistakes, excessive self-criticism,
-                    difficulty starting and cognitive overload.
-
-                    Structure the lesson to reduce psychological and cognitive barriers:
-
-                    - Divide the lesson into small, clearly defined learning sections.
-                    - Introduce one major concept at a time.
-                    - Use a clear progression from basic to more advanced ideas.
-                    - Provide explicit learning objectives for each major section.
-                    - Use step-by-step examples.
-                    - Prefer guided exercises before open-ended challenges.
-                    - Include frequent checkpoints that reinforce what was learned.
-                    - Normalize mistakes as part of learning.
-                    - Avoid unnecessarily difficult or ambiguous exercises.
-                    - Avoid long uninterrupted explanations.
-                    - Make progress and completion points explicit.
-                    - Do not use excessive motivational language.
-
-                    The lesson should feel structured, predictable and achievable.""";
+                    PERFECTIONIST STRUCTURE PREFERENCES:
+                    * Emphasize linear progression, predictability, and psychological safety.
+                    * Suggested flow: EXPLANATION -> EXAMPLE -> GUIDED_EXERCISE -> CHECKPOINT -> EXAMPLE -> QUIZ -> SUMMARY.
+                    * Ensure every concept has a step-by-step example and guided exercise before any assessment.
+                    * Use CHECKPOINT blocks to validate understanding and reduce ambiguity.""";
             case STIMULUS_SEEKER -> """
-                    PERSONALIZED LEARNING STRATEGY — STIMULUS SEEKER
+                    STIMULUS_SEEKER STRUCTURE PREFERENCES:
+                    * Emphasize brevity, novelty, frequent activity switching, and immediate feedback.
+                    * Suggested flow: EXPLANATION -> EXAMPLE -> QUIZ -> CHALLENGE -> FLASHCARD -> EXAMPLE -> SUMMARY.
+                    * Interleave short theoretical blocks with interactive micro-challenges, quizzes, and active recall flashcards.
+                    * Keep all blocks punchy (5-7 minutes each).""";
+        };
+    }
 
-                    The learner may lose interest quickly, seek novelty and respond better
-                    to frequent changes in activity and immediate feedback.
+    private String getBlockTypeSpecificGuidelines(ContentBlockType blockType) {
+        return switch (blockType) {
+            case EXPLANATION -> """
+                    * Provide a crystal-clear, structured explanation of the core concept.
+                    * Use analogies, bullet points, and clean syntax highlights.
+                    * Explain the 'why' and 'how' with zero unnecessary fluff.""";
+            case EXAMPLE -> """
+                    * Provide realistic, clean, and fully commented code/practical examples.
+                    * Break down the example line by line or step by step.
+                    * Show expected outputs or results clearly.""";
+            case GUIDED_EXERCISE -> """
+                    * Present a practical problem scenario and guide the student.
+                    * Format strictly using the following sections:
+                      ### Enunciado
+                      [Descrição do problema e objetivo prático]
+                      ### Dica
+                      [Dica para orientar o início do raciocínio]
+                      ### Resolução
+                      [Código ou passo a passo completo comentado]""";
+            case QUIZ -> """
+                    * Provide 2 to 3 concise multiple choice questions.
+                    * Format each question strictly as:
+                      ### Questão 1
+                      [Enunciado da pergunta]
+                      - (A) [Opção A]
+                      - (B) [Opção B]
+                      - (C) [Opção C]
+                      - (D) [Opção D]
+                      **Resposta Correta:** A
+                      **Explicação:** [Explicação concisa do porquê está correta e as outras erradas]""";
+            case FLASHCARD -> """
+                    * Provide 2 to 4 active recall flashcards.
+                    * Format each card strictly as:
+                      ### Card 1
+                      **Frente:** [Pergunta ou conceito chave para recordar]
+                      **Verso:** [Resposta direta, definição essencial ou exemplo chave]""";
+            case CHALLENGE -> """
+                    * Present a concise micro-challenge or practical problem to solve.
+                    * Format strictly using the following sections:
+                      ### Desafio
+                      [Descrição do desafio e requisitos]
+                      ### Dica
+                      [Dica útil para começar]
+                      ### Resolução
+                      [Código completo e explicação da solução]""";
+            case CHECKPOINT -> """
+                    * A self-assessment checkpoint with 3 to 4 verification criteria.
+                    * Format as:
+                      ### Verificação de Compreensão
+                      - [ ] [Critério 1 que o aluno deve ter compreendido]
+                      - [ ] [Critério 2 que o aluno deve ter compreendido]
+                      - [ ] [Critério 3 que o aluno deve ter compreendido]
+                      **Mensagem:** [Mensagem encorajadora sobre o progresso]""";
+            case SUMMARY -> """
+                    * 3 to 5 bullet points summarizing the most vital takeaways.
+                    * A 'Dica de Ouro' (Golden Rule / Pro Tip) for real-world application.""";
+        };
+    }
 
-                    Structure the lesson as a sequence of short learning blocks:
-
-                    - Prefer learning blocks of approximately 5–10 minutes.
-                    - Avoid long uninterrupted theoretical sections.
-                    - Alternate between explanation, examples and active practice.
-                    - Introduce a quiz, recall question, flashcard or mini-challenge
-                    frequently when appropriate.
-                    - Prefer concrete examples before abstract explanations.
-                    - Vary activity formats throughout the lesson.
-                    - Provide immediate feedback after interactive activities.
-                    - Create frequent, meaningful completion points.
-                    - Keep instructions short and direct.
-                    - Avoid repetitive exercises.
-                    - Use visible progress markers between learning blocks.
-                    - Use small challenges to maintain engagement, but do not sacrifice
-                    conceptual correctness or educational depth.
-
-                    The lesson should feel dynamic, varied and continuously progressive.""";
+    private String getBlockContentProfilePedagogy(ProcrastinationProfile profileType) {
+        return switch (profileType) {
+            case PERFECTIONIST -> """
+                    * Maintain high clarity and predictability.
+                    * Normalize mistakes and demystify edge cases.
+                    * Use step-by-step guidance and structured, achievable milestones.""";
+            case STIMULUS_SEEKER -> """
+                    * Keep text dynamic, concise, and focused on active engagement.
+                    * Use concrete examples before abstract theory.
+                    * Deliver immediate feedback and actionable takeaways.""";
         };
     }
 }

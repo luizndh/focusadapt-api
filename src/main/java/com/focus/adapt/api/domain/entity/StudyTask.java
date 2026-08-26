@@ -60,4 +60,30 @@ public class StudyTask extends BaseEntity {
     @ManyToMany(mappedBy = "studyTasks")
     @Builder.Default
     private List<StudySession> studySessions = new ArrayList<>();
+
+    @jakarta.persistence.OneToMany(mappedBy = "studyTask", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    @jakarta.persistence.OrderBy("sortOrder ASC")
+    @Builder.Default
+    private List<ContentBlock> contentBlocks = new ArrayList<>();
+
+    public void setContentBlocks(List<ContentBlock> blocks) {
+        this.contentBlocks.clear();
+        if (blocks != null) {
+            this.contentBlocks.addAll(blocks);
+        }
+    }
+
+    public void addContentBlock(ContentBlock block) {
+        if (block != null) {
+            this.contentBlocks.add(block);
+            block.setStudyTask(this);
+        }
+    }
+
+    public void removeContentBlock(ContentBlock block) {
+        if (block != null) {
+            this.contentBlocks.remove(block);
+            block.setStudyTask(null);
+        }
+    }
 }

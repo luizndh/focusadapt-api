@@ -3,6 +3,7 @@ package com.focus.adapt.api.infrastructure.integration.gemini;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.focus.adapt.api.application.dto.AiStudyPlanResponse;
+import com.focus.adapt.api.application.dto.AiTaskBlocksResponse;
 import com.focus.adapt.api.infrastructure.exception.BusinessException;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,16 @@ public class ResponseParser {
         } catch (JsonProcessingException e) {
             log.error("Failed to parse StudyPlan with tasks from JSON: {}", cleanJson, e);
             throw new BusinessException("AI generated plan did not conform to the required JSON schema");
+        }
+    }
+
+    public AiTaskBlocksResponse parseTaskBlocksStructure(String rawResponse) {
+        String cleanJson = cleanJsonResponse(rawResponse);
+        try {
+            return objectMapper.readValue(cleanJson, AiTaskBlocksResponse.class);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse ContentBlocks structure from JSON: {}", cleanJson, e);
+            throw new BusinessException("AI generated blocks did not conform to the required JSON schema");
         }
     }
 

@@ -1,5 +1,6 @@
 package com.focus.adapt.api.application.service;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -89,22 +90,37 @@ public class StudyPlanService {
 
     @Transactional
     public StudyPlanResponse generateStudyPlan(StudyPlanGenerateRequest request, User user) {
+        LocalDate effectiveStart = request.getEffectiveStartDate();
+        int effectiveMinutes = request.getEffectiveMinutesPerDay();
+
         AiStudyPlanResponse aiResponse = aiService.generateStudyPlan(
                 request.getTopic(),
                 request.getDescription(),
-                request.getAvailableHoursPerDay(),
+                effectiveMinutes,
                 request.getAvailableDays(),
-                request.getStartDate(),
+                effectiveStart,
                 user
         );
 
+        LocalDate planStartDate = aiResponse.getStartDate() != null ? aiResponse.getStartDate() : effectiveStart;
+        LocalDate planEndDate = aiResponse.getEndDate() != null ? aiResponse.getEndDate() : planStartDate.plusDays(14);
+
+        int totalMinutes = aiResponse.getTotalEstimatedDurationMinutes();
+        if (totalMinutes <= 0 && aiResponse.getTasks() != null) {
+            totalMinutes = aiResponse.getTasks().stream()
+                    .mapToInt(AiStudyPlanResponse.AiStudyTaskItem::getEstimatedDurationMinutes)
+                    .sum();
+        }
+
         StudyPlan plan = StudyPlan.builder()
-                .title(aiResponse.getTitle())
-                .description(aiResponse.getDescription())
-                .category(aiResponse.getCategory())
-                .startDate(aiResponse.getStartDate())
-                .endDate(aiResponse.getEndDate())
-                .totalEstimatedDurationMinutes(aiResponse.getTotalEstimatedDurationMinutes())
+                .title(aiResponse.getTitle() != null && !aiResponse.getTitle().isBlank() ? aiResponse.getTitle() : request.getTopic())
+                .description(aiResponse.getDescription() != null ? aiResponse.getDescription() : request.getDescription())
+                .category(aiResponse.getCategory() != null ? aiResponse.getCategory() : "Geral")
+                .startDate(planStartDate)
+                .endDate(planEndDate)
+                .totalEstimatedDurationMinutes(totalMinutes)
+                .availableHoursPerDay((effectiveMinutes + 59) / 60)
+                .availableDays(request.getFormattedAvailableDays())
                 .status(StudyPlanStatus.ACTIVE)
                 .user(user)
                 .build();
@@ -113,11 +129,13 @@ public class StudyPlanService {
 
         if (aiResponse.getTasks() != null) {
             for (AiStudyPlanResponse.AiStudyTaskItem taskItem : aiResponse.getTasks()) {
+                LocalDate taskDate = taskItem.getScheduledDate() != null ? taskItem.getScheduledDate() : planStartDate;
                 StudyTask task = StudyTask.builder()
                         .title(taskItem.getTitle())
                         .description(taskItem.getDescription())
                         .sortOrder(taskItem.getOrder())
                         .estimatedDurationMinutes(taskItem.getEstimatedDurationMinutes())
+                        .scheduledDate(taskDate)
                         .status(StudyTaskStatus.PENDING)
                         .studyPlan(savedPlan)
                         .build();

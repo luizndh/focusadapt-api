@@ -19,4 +19,5 @@ public class StudyTaskResponse {
     private int estimatedDurationMinutes;
     private String content;
     private LocalDate scheduledDate;
+    private java.util.List<ContentBlockResponse> blocks;
 }

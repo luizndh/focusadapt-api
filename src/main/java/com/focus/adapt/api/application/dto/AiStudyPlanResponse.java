@@ -28,5 +28,6 @@ public class AiStudyPlanResponse {
         private String description;
         private int order;
         private int estimatedDurationMinutes;
+        private LocalDate scheduledDate;
     }
 }

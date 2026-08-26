@@ -43,6 +43,18 @@ CREATE TABLE IF NOT EXISTS study_tasks (
     FOREIGN KEY (study_plan_id) REFERENCES study_plans(id)
 );
 
+CREATE TABLE IF NOT EXISTS content_blocks (
+    id UUID NOT NULL PRIMARY KEY,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    block_type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    estimated_minutes INTEGER NOT NULL DEFAULT 5,
+    content TEXT,
+    completed BOOLEAN NOT NULL DEFAULT false,
+    study_task_id UUID NOT NULL,
+    FOREIGN KEY (study_task_id) REFERENCES study_tasks(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS study_sessions (
     id UUID NOT NULL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
