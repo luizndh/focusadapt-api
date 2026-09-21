@@ -117,6 +117,8 @@ CREATE TABLE IF NOT EXISTS badges (
     id UUID NOT NULL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     icon_url VARCHAR(255)
 );
 
@@ -125,6 +127,8 @@ CREATE TABLE IF NOT EXISTS user_achievements (
     user_id UUID NOT NULL,
     badge_id UUID NOT NULL,
     unlocked_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (badge_id) REFERENCES badges(id)
 );
@@ -134,6 +138,8 @@ CREATE TABLE IF NOT EXISTS points_history (
     user_id UUID NOT NULL,
     points INTEGER NOT NULL,
     reason VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     description TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
