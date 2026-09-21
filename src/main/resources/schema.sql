@@ -11,7 +11,10 @@ CREATE TABLE IF NOT EXISTS users (
     last_study_date DATE,
     role VARCHAR(255) NOT NULL DEFAULT 'USER',
     onboarding_completed BOOLEAN NOT NULL DEFAULT false,
-    deleted BOOLEAN NOT NULL DEFAULT false
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted BOOLEAN NOT NULL DEFAULT false,
+    questionnaire_completed BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS study_plans (
@@ -27,6 +30,8 @@ CREATE TABLE IF NOT EXISTS study_plans (
     available_days VARCHAR(255),
     deleted BOOLEAN NOT NULL DEFAULT false,
     user_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -40,6 +45,8 @@ CREATE TABLE IF NOT EXISTS study_tasks (
     content TEXT,
     status VARCHAR(255) NOT NULL DEFAULT 'PENDING',
     study_plan_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (study_plan_id) REFERENCES study_plans(id)
 );
 
@@ -52,6 +59,8 @@ CREATE TABLE IF NOT EXISTS content_blocks (
     content TEXT,
     completed BOOLEAN NOT NULL DEFAULT false,
     study_task_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (study_task_id) REFERENCES study_tasks(id) ON DELETE CASCADE
 );
 
@@ -68,6 +77,8 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     deleted BOOLEAN NOT NULL DEFAULT false,
     user_id UUID NOT NULL,
     study_plan_id UUID,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (study_plan_id) REFERENCES study_plans(id)
 );
@@ -85,6 +96,8 @@ CREATE TABLE IF NOT EXISTS missions (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     xp_reward INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     target_value INTEGER NOT NULL DEFAULT 1
 );
 
@@ -95,6 +108,8 @@ CREATE TABLE IF NOT EXISTS user_missions (
     current_value INTEGER NOT NULL DEFAULT 0,
     status VARCHAR(255) NOT NULL DEFAULT 'IN_PROGRESS',
     FOREIGN KEY (user_id) REFERENCES users(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (mission_id) REFERENCES missions(id)
 );
 
@@ -120,24 +135,5 @@ CREATE TABLE IF NOT EXISTS points_history (
     points INTEGER NOT NULL,
     reason VARCHAR(255) NOT NULL,
     description TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
-CREATE TABLE IF NOT EXISTS activity_logs (
-    id UUID NOT NULL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    action VARCHAR(255) NOT NULL,
-    category VARCHAR(255) NOT NULL,
-    details TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
-CREATE TABLE IF NOT EXISTS notifications (
-    id UUID NOT NULL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    content TEXT,
-    type VARCHAR(255) NOT NULL,
-    is_read BOOLEAN NOT NULL DEFAULT false,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );

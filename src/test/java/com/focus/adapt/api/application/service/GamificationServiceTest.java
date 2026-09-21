@@ -1,14 +1,13 @@
 package com.focus.adapt.api.application.service;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -16,18 +15,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.focus.adapt.api.domain.entity.ActivityLog;
 import com.focus.adapt.api.domain.entity.PointsHistory;
 import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.StudyTask;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudyMode;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
-import com.focus.adapt.api.infrastructure.repository.ActivityLogRepository;
-import com.focus.adapt.api.infrastructure.repository.BadgeRepository;
-import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
 import com.focus.adapt.api.infrastructure.repository.PointsHistoryRepository;
-import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserRepository;
 
@@ -41,19 +35,7 @@ class GamificationServiceTest {
     private PointsHistoryRepository pointsHistoryRepository;
 
     @Mock
-    private ActivityLogRepository activityLogRepository;
-
-    @Mock
     private UserMissionRepository userMissionRepository;
-
-    @Mock
-    private NotificationRepository notificationRepository;
-
-    @Mock
-    private UserAchievementRepository userAchievementRepository;
-
-    @Mock
-    private BadgeRepository badgeRepository;
 
     @InjectMocks
     private GamificationService gamificationService;
@@ -88,7 +70,6 @@ class GamificationServiceTest {
         assertEquals(50, user.getPoints());
         verify(userRepository).save(user);
         verify(pointsHistoryRepository).save(any(PointsHistory.class));
-        verify(activityLogRepository).save(any(ActivityLog.class));
     }
 
     @Test
@@ -112,7 +93,6 @@ class GamificationServiceTest {
         assertEquals(100, user.getPoints());
         verify(userRepository).save(user);
         verify(pointsHistoryRepository).save(any(PointsHistory.class));
-        verify(activityLogRepository).save(any(ActivityLog.class));
     }
 
     @Test

@@ -1,6 +1,5 @@
 package com.focus.adapt.api.application.service;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -105,17 +104,6 @@ public class UserService {
         } else {
             profile = ProcrastinationProfile.PERFECTIONIST;
         }
-
-        user.setQuestionnaireCompleted(true);
-        user.setProcrastinationProfile(profile);
-
-        User savedUser = userRepository.save(user);
-        return userMapper.toResponse(savedUser);
-    }
-
-    @Transactional
-    public UserResponse submitQuestionnaire(User user, Map<String, Integer> answers) {
-        ProcrastinationProfile profile = profileCalculator.calculate(answers);
 
         user.setQuestionnaireCompleted(true);
         user.setProcrastinationProfile(profile);

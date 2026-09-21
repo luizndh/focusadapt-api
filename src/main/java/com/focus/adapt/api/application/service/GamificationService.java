@@ -8,7 +8,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.focus.adapt.api.domain.entity.ActivityLog;
 import com.focus.adapt.api.domain.entity.Badge;
 import com.focus.adapt.api.domain.entity.Mission;
 import com.focus.adapt.api.domain.entity.Notification;
@@ -17,12 +16,10 @@ import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.UserAchievement;
 import com.focus.adapt.api.domain.entity.UserMission;
-import com.focus.adapt.api.domain.entity.enums.ActivityCategory;
 import com.focus.adapt.api.domain.entity.enums.NotificationType;
 import com.focus.adapt.api.domain.entity.enums.PointsReason;
 import com.focus.adapt.api.domain.entity.enums.StudyMode;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
-import com.focus.adapt.api.infrastructure.repository.ActivityLogRepository;
 import com.focus.adapt.api.infrastructure.repository.BadgeRepository;
 import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
 import com.focus.adapt.api.infrastructure.repository.PointsHistoryRepository;
@@ -38,7 +35,6 @@ public class GamificationService {
 
     private final UserRepository userRepository;
     private final PointsHistoryRepository pointsHistoryRepository;
-    private final ActivityLogRepository activityLogRepository;
     private final UserMissionRepository userMissionRepository;
     private final NotificationRepository notificationRepository;
     private final UserAchievementRepository userAchievementRepository;
@@ -81,14 +77,6 @@ public class GamificationService {
                 .description("Completed study session: " + session.getTitle())
                 .build();
         pointsHistoryRepository.save(pointsHistory);
-
-        ActivityLog logEntry = ActivityLog.builder()
-                .user(user)
-                .action("STUDY_SESSION_COMPLETE")
-                .category(ActivityCategory.STUDY)
-                .details("Completed study session '" + session.getTitle() + "' and earned " + pointsAwarded + " XP.")
-                .build();
-        activityLogRepository.save(logEntry);
 
         List<UserMission> activeMissions = userMissionRepository.findByUserAndStatus(user, UserMissionStatus.IN_PROGRESS);
 
