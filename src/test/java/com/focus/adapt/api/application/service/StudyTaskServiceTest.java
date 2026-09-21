@@ -16,6 +16,7 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -215,5 +216,57 @@ class StudyTaskServiceTest {
         when(studyTaskRepository.findById(task.getId())).thenReturn(Optional.of(task));
 
         assertThrows(BusinessException.class, () -> studyTaskService.getTaskWithBlocks(task.getId(), otherUser));
+    }
+
+    @Test
+    void shouldDeduplicateConcurrentBlockContentGenerations() throws Exception {
+        UUID blockId = UUID.randomUUID();
+        ContentBlock block = ContentBlock.builder()
+                .sortOrder(1)
+                .blockType(ContentBlockType.EXPLANATION)
+                .title("Intro")
+                .content(null)
+                .studyTask(task)
+                .build();
+        block.setId(blockId);
+
+        when(studyTaskRepository.findById(task.getId())).thenReturn(Optional.of(task));
+        when(contentBlockRepository.findById(blockId)).thenReturn(Optional.of(block));
+
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+        when(aiService.generateBlockContent(task, block, user)).thenAnswer(inv -> {
+            latch.await(2, java.util.concurrent.TimeUnit.SECONDS);
+            return "# Concurrently Generated Content";
+        });
+        when(contentBlockRepository.save(any(ContentBlock.class))).thenReturn(block);
+
+        ContentBlockResponse expectedResponse = ContentBlockResponse.builder()
+                .id(blockId)
+                .content("# Concurrently Generated Content")
+                .build();
+        when(contentBlockMapper.toResponse(any(ContentBlock.class))).thenReturn(expectedResponse);
+
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(2);
+        java.util.concurrent.Future<ContentBlockResponse> future1 = executor.submit(() ->
+                studyTaskService.getBlockContent(task.getId(), blockId, user));
+
+        Thread.sleep(50);
+
+        java.util.concurrent.Future<ContentBlockResponse> future2 = executor.submit(() ->
+                studyTaskService.getBlockContent(task.getId(), blockId, user));
+
+        Thread.sleep(100);
+        latch.countDown();
+
+        ContentBlockResponse response1 = future1.get(5, java.util.concurrent.TimeUnit.SECONDS);
+        ContentBlockResponse response2 = future2.get(5, java.util.concurrent.TimeUnit.SECONDS);
+        executor.shutdown();
+
+        assertNotNull(response1);
+        assertNotNull(response2);
+        assertEquals("# Concurrently Generated Content", response1.getContent());
+        assertEquals("# Concurrently Generated Content", response2.getContent());
+
+        verify(aiService, times(1)).generateBlockContent(any(), any(), any());
     }
 }

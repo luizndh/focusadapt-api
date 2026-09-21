@@ -3,6 +3,8 @@ package com.focus.adapt.api.application.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -36,6 +38,8 @@ public class StudyTaskService {
     private final StudyTaskMapper studyTaskMapper;
     private final ContentBlockMapper contentBlockMapper;
     private final AiService aiService;
+
+    private final ConcurrentHashMap<UUID, CompletableFuture<String>> inFlightGenerations = new ConcurrentHashMap<>();
 
     @Transactional
     public StudyTaskResponse createTask(StudyTaskRequest request) {
@@ -138,13 +142,42 @@ public class StudyTaskService {
             throw new BusinessException("ContentBlock does not belong to the specified StudyTask");
         }
 
-        if (block.getContent() == null || block.getContent().isBlank()) {
+        if (block.getContent() != null && !block.getContent().isBlank()) {
+            return contentBlockMapper.toResponse(block);
+        }
+
+        CompletableFuture<String> newFuture = new CompletableFuture<>();
+        CompletableFuture<String> existingFuture = inFlightGenerations.putIfAbsent(blockId, newFuture);
+
+        if (existingFuture != null) {
+            try {
+                String generatedContent = existingFuture.join();
+                block.setContent(generatedContent);
+                return contentBlockMapper.toResponse(block);
+            } catch (Exception e) {
+                Throwable cause = e.getCause() != null ? e.getCause() : e;
+                if (cause instanceof RuntimeException runtimeException) {
+                    throw runtimeException;
+                }
+                throw new BusinessException("Erro ao gerar conteúdo do bloco: " + cause.getMessage());
+            }
+        }
+
+        try {
             String content = aiService.generateBlockContent(task, block, user);
             block.setContent(content);
             block = contentBlockRepository.save(block);
+            newFuture.complete(content);
+            return contentBlockMapper.toResponse(block);
+        } catch (Throwable t) {
+            newFuture.completeExceptionally(t);
+            if (t instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw new BusinessException("Erro ao gerar conteúdo do bloco: " + t.getMessage());
+        } finally {
+            inFlightGenerations.remove(blockId);
         }
-
-        return contentBlockMapper.toResponse(block);
     }
 
     /**
