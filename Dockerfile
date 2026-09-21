@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM maven:3.9.16-eclipse-temurin-11 AS build
+FROM maven:3.9.16-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Cache Maven dependencies layer
@@ -15,7 +15,7 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Create a secure non-root system user/group to run the application
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN groupadd --system spring && useradd --system --gid spring spring
 USER spring:spring
 
 # Copy built artifact from build stage

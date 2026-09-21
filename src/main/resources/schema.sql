@@ -1,4 +1,5 @@
 -- Database Schema for FocusAdapt API
+-- Aligned with JPA entities in com.focus.adapt.api.domain.entity
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL PRIMARY KEY,
@@ -11,10 +12,33 @@ CREATE TABLE IF NOT EXISTS users (
     last_study_date DATE,
     role VARCHAR(255) NOT NULL DEFAULT 'USER',
     onboarding_completed BOOLEAN NOT NULL DEFAULT false,
+    questionnaire_completed BOOLEAN NOT NULL DEFAULT false,
+    deleted BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id UUID NOT NULL PRIMARY KEY,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expiry_date TIMESTAMP NOT NULL,
+    revoked BOOLEAN NOT NULL DEFAULT false,
+    user_id UUID NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted BOOLEAN NOT NULL DEFAULT false,
-    questionnaire_completed BOOLEAN NOT NULL DEFAULT false
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID NOT NULL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT false,
+    type VARCHAR(255) NOT NULL,
+    user_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS study_plans (
@@ -26,8 +50,8 @@ CREATE TABLE IF NOT EXISTS study_plans (
     total_estimated_duration_minutes INTEGER NOT NULL DEFAULT 0,
     available_hours_per_day INTEGER NOT NULL DEFAULT 2,
     start_date DATE NOT NULL,
-    end_date DATE,
-    available_days VARCHAR(255),
+    end_date DATE NOT NULL,
+    available_days VARCHAR(255) DEFAULT 'Mon,Tue,Wed,Thu,Fri,Sat,Sun',
     deleted BOOLEAN NOT NULL DEFAULT false,
     user_id UUID NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -73,6 +97,10 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     duration_minutes INTEGER NOT NULL DEFAULT 0,
     effective_study_minutes INTEGER NOT NULL DEFAULT 0,
     status VARCHAR(255) NOT NULL,
+    notes TEXT,
+    work_duration_minutes INTEGER NOT NULL DEFAULT 0,
+    break_duration_minutes INTEGER NOT NULL DEFAULT 0,
+    completed_cycles INTEGER NOT NULL DEFAULT 0,
     total_pauses_count INTEGER NOT NULL DEFAULT 0,
     deleted BOOLEAN NOT NULL DEFAULT false,
     user_id UUID NOT NULL,
@@ -94,11 +122,13 @@ CREATE TABLE IF NOT EXISTS study_session_tasks (
 CREATE TABLE IF NOT EXISTS missions (
     id UUID NOT NULL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    description TEXT,
-    xp_reward INTEGER NOT NULL DEFAULT 0,
+    description TEXT NOT NULL,
+    points_reward INTEGER NOT NULL DEFAULT 0,
+    mission_type VARCHAR(255) NOT NULL,
+    target_value INTEGER NOT NULL DEFAULT 1,
+    active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    target_value INTEGER NOT NULL DEFAULT 1
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS user_missions (
@@ -107,19 +137,20 @@ CREATE TABLE IF NOT EXISTS user_missions (
     mission_id UUID NOT NULL,
     current_value INTEGER NOT NULL DEFAULT 0,
     status VARCHAR(255) NOT NULL DEFAULT 'IN_PROGRESS',
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    completed_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (mission_id) REFERENCES missions(id)
 );
 
 CREATE TABLE IF NOT EXISTS badges (
     id UUID NOT NULL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
-    description TEXT,
+    description TEXT NOT NULL,
+    icon_url VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    icon_url VARCHAR(255)
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS user_achievements (
@@ -138,8 +169,8 @@ CREATE TABLE IF NOT EXISTS points_history (
     user_id UUID NOT NULL,
     points INTEGER NOT NULL,
     reason VARCHAR(255) NOT NULL,
+    description TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    description TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
