@@ -8,8 +8,6 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD} # Change this in real deployment
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata_prod:/var/lib/postgresql/data
     healthcheck:
