@@ -3,24 +3,20 @@ package com.focus.adapt.api.application.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.focus.adapt.api.application.dto.BadgeResponse;
 import com.focus.adapt.api.application.dto.DashboardResponse;
-import com.focus.adapt.api.application.dto.NotificationResponse;
 import com.focus.adapt.api.application.dto.UserMissionResponse;
 import com.focus.adapt.api.application.mapper.BadgeMapper;
 import com.focus.adapt.api.application.mapper.MissionMapper;
-import com.focus.adapt.api.application.mapper.NotificationMapper;
 import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudyMode;
 import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
-import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
 import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
@@ -36,11 +32,9 @@ public class DashboardService {
     private final StudySessionRepository studySessionRepository;
     private final UserMissionRepository userMissionRepository;
     private final UserAchievementRepository userAchievementRepository;
-    private final NotificationRepository notificationRepository;
 
     private final MissionMapper missionMapper;
     private final BadgeMapper badgeMapper;
-    private final NotificationMapper notificationMapper;
 
     @Transactional(readOnly = true)
     public DashboardResponse getDashboard(User user) {
@@ -58,13 +52,7 @@ public class DashboardService {
                 .map(ua -> badgeMapper.toResponse(ua.getBadge()))
                 .collect(Collectors.toList());
 
-        // 3. Recent notifications
-        List<NotificationResponse> recentNotifications = notificationRepository.findByUserAndIsRead(currentUser, false, PageRequest.of(0, 5))
-                .getContent().stream()
-                .map(notificationMapper::toResponse)
-                .collect(Collectors.toList());
-
-        // 4. Study stats from StudySessions
+        // 3. Study stats from StudySessions
         List<StudySession> completedSessions = studySessionRepository.findByUserAndStatus(currentUser, StudySessionStatus.COMPLETED, Pageable.unpaged())
                 .getContent();
 
@@ -85,7 +73,6 @@ public class DashboardService {
                 .procrastinationProfile(currentUser.getProcrastinationProfile() != null ? currentUser.getProcrastinationProfile().name() : null)
                 .activeMissions(activeMissions)
                 .unlockedBadges(unlockedBadges)
-                .recentNotifications(recentNotifications)
                 .studyStats(DashboardResponse.StudyStats.builder()
                         .totalStudyMinutes(totalStudyMinutes)
                         .sessionsCount(sessionsCount)

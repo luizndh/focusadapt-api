@@ -20,7 +20,6 @@ public class DashboardResponse {
     private String procrastinationProfile;
     private List<UserMissionResponse> activeMissions;
     private List<BadgeResponse> unlockedBadges;
-    private List<NotificationResponse> recentNotifications;
     private StudyStats studyStats;
 
     @Getter

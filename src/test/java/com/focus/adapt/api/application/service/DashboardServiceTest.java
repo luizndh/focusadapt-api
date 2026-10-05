@@ -19,12 +19,10 @@ import org.springframework.data.domain.Pageable;
 import com.focus.adapt.api.application.dto.DashboardResponse;
 import com.focus.adapt.api.application.mapper.BadgeMapper;
 import com.focus.adapt.api.application.mapper.MissionMapper;
-import com.focus.adapt.api.application.mapper.NotificationMapper;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
 import com.focus.adapt.api.domain.entity.enums.UserRole;
-import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
 import com.focus.adapt.api.infrastructure.repository.StudySessionRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
@@ -46,16 +44,10 @@ class DashboardServiceTest {
     private UserAchievementRepository userAchievementRepository;
 
     @Mock
-    private NotificationRepository notificationRepository;
-
-    @Mock
     private MissionMapper missionMapper;
 
     @Mock
     private BadgeMapper badgeMapper;
-
-    @Mock
-    private NotificationMapper notificationMapper;
 
     @InjectMocks
     private DashboardService dashboardService;
@@ -78,8 +70,6 @@ class DashboardServiceTest {
         when(userMissionRepository.findByUserAndStatus(any(User.class), eq(UserMissionStatus.IN_PROGRESS)))
                 .thenReturn(Collections.emptyList());
         when(userAchievementRepository.findByUser(any(User.class), any(Pageable.class)))
-                .thenReturn(Page.empty());
-        when(notificationRepository.findByUserAndIsRead(any(User.class), eq(false), any(Pageable.class)))
                 .thenReturn(Page.empty());
         when(studySessionRepository.findByUserAndStatus(any(User.class), eq(StudySessionStatus.COMPLETED), any(Pageable.class)))
                 .thenReturn(Page.empty());

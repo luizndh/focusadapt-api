@@ -10,18 +10,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.focus.adapt.api.domain.entity.Badge;
 import com.focus.adapt.api.domain.entity.Mission;
-import com.focus.adapt.api.domain.entity.Notification;
 import com.focus.adapt.api.domain.entity.PointsHistory;
 import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.UserAchievement;
 import com.focus.adapt.api.domain.entity.UserMission;
-import com.focus.adapt.api.domain.entity.enums.NotificationType;
 import com.focus.adapt.api.domain.entity.enums.PointsReason;
 import com.focus.adapt.api.domain.entity.enums.StudyMode;
 import com.focus.adapt.api.domain.entity.enums.UserMissionStatus;
 import com.focus.adapt.api.infrastructure.repository.BadgeRepository;
-import com.focus.adapt.api.infrastructure.repository.NotificationRepository;
 import com.focus.adapt.api.infrastructure.repository.PointsHistoryRepository;
 import com.focus.adapt.api.infrastructure.repository.UserAchievementRepository;
 import com.focus.adapt.api.infrastructure.repository.UserMissionRepository;
@@ -36,7 +33,6 @@ public class GamificationService {
     private final UserRepository userRepository;
     private final PointsHistoryRepository pointsHistoryRepository;
     private final UserMissionRepository userMissionRepository;
-    private final NotificationRepository notificationRepository;
     private final UserAchievementRepository userAchievementRepository;
     private final BadgeRepository badgeRepository;
 
@@ -96,15 +92,6 @@ public class GamificationService {
 
             if (um.getCurrentValue() >= m.getTargetValue()) {
                 um.setStatus(UserMissionStatus.COMPLETED);
-
-                Notification notification = Notification.builder()
-                        .user(user)
-                        .title("Mission Completed!")
-                        .content("You completed the mission: " + m.getTitle() + "! Go to your dashboard to claim your points.")
-                        .type(NotificationType.MISSION_COMPLETED)
-                        .isRead(false)
-                        .build();
-                notificationRepository.save(notification);
             }
             userMissionRepository.save(um);
         }
@@ -140,15 +127,6 @@ public class GamificationService {
                     .unlockedAt(LocalDateTime.now())
                     .build();
             userAchievementRepository.save(achievement);
-
-            Notification notification = Notification.builder()
-                    .user(user)
-                    .title("New Badge Unlocked: " + name + "!")
-                    .content("Congratulations! You earned a new badge: " + description)
-                    .type(NotificationType.SYSTEM)
-                    .isRead(false)
-                    .build();
-            notificationRepository.save(notification);
         }
     }
 }
