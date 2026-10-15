@@ -2,6 +2,7 @@ package com.focus.adapt.api.application.service;
 
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,9 +11,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.focus.adapt.api.application.dto.SessionGamificationResult;
 import com.focus.adapt.api.application.dto.StudySessionRequest;
 import com.focus.adapt.api.application.dto.StudySessionResponse;
+import com.focus.adapt.api.application.mapper.BadgeMapper;
 import com.focus.adapt.api.application.mapper.StudySessionMapper;
+import com.focus.adapt.api.domain.entity.Badge;
 import com.focus.adapt.api.domain.entity.StudyPlan;
 import com.focus.adapt.api.domain.entity.StudySession;
 import com.focus.adapt.api.domain.entity.StudyTask;
@@ -35,6 +39,7 @@ public class StudySessionService {
     private final StudySessionRepository studySessionRepository;
     private final StudyTaskRepository studyTaskRepository;
     private final StudySessionMapper studySessionMapper;
+    private final BadgeMapper badgeMapper;
     private final GamificationService gamificationService;
 
     @Transactional
@@ -52,6 +57,12 @@ public class StudySessionService {
             session.setBreakDurationMinutes(request.getBreakDurationMinutes() != null ? request.getBreakDurationMinutes() : 5);
         }
 
+        if (request.getCompletedCycles() != null) {
+            session.setCompletedCycles(request.getCompletedCycles());
+        }
+        if (request.getEffectiveStudyMinutes() != null) {
+            session.setEffectiveStudyMinutes(request.getEffectiveStudyMinutes());
+        }
         if (request.getTotalPausesCount() != null) {
             session.setTotalPausesCount(request.getTotalPausesCount());
         }
@@ -59,18 +70,30 @@ public class StudySessionService {
         associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);
 
         StudySession saved = studySessionRepository.save(session);
+        SessionGamificationResult gamificationResult = SessionGamificationResult.empty();
 
-        if (saved.getStatus() == StudySessionStatus.COMPLETED) {
+        if (saved.getStatus() == StudySessionStatus.COMPLETED && saved.getXpAwarded() == 0) {
             for (StudyTask task : saved.getStudyTasks()) {
                 if (task.getStatus() != StudyTaskStatus.COMPLETED) {
                     task.setStatus(StudyTaskStatus.COMPLETED);
                     studyTaskRepository.save(task);
                 }
             }
-            gamificationService.processSessionCompletion(saved, user);
+            studySessionRepository.flush();
+            studyTaskRepository.flush();
+            gamificationResult = gamificationService.processSessionCompletion(saved, user);
+            saved = studySessionRepository.save(saved);
         }
 
-        return studySessionMapper.toResponse(saved);
+        StudySessionResponse response = studySessionMapper.toResponse(saved);
+        response.setSessionXp(gamificationResult.sessionXp());
+        response.setBadgeBonusXp(gamificationResult.badgeBonusXp());
+        response.setTotalXp(gamificationResult.totalXp());
+        response.setXpEarned(gamificationResult.totalXp());
+        if (gamificationResult.unlockedBadges() != null && !gamificationResult.unlockedBadges().isEmpty()) {
+            response.setUnlockedBadges(gamificationResult.unlockedBadges().stream().map(badgeMapper::toResponse).toList());
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -136,6 +159,7 @@ public class StudySessionService {
         associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);
 
         StudySession updated = studySessionRepository.save(session);
+        SessionGamificationResult gamificationResult = SessionGamificationResult.empty();
 
         if (request.getStatus() == StudySessionStatus.COMPLETED) {
             for (StudyTask task : updated.getStudyTasks()) {
@@ -144,12 +168,23 @@ public class StudySessionService {
                     studyTaskRepository.save(task);
                 }
             }
-            if (oldStatus != StudySessionStatus.COMPLETED) {
-                gamificationService.processSessionCompletion(updated, user);
+            if (oldStatus != StudySessionStatus.COMPLETED && updated.getXpAwarded() == 0) {
+                studySessionRepository.flush();
+                studyTaskRepository.flush();
+                gamificationResult = gamificationService.processSessionCompletion(updated, user);
+                updated = studySessionRepository.save(updated);
             }
         }
 
-        return studySessionMapper.toResponse(updated);
+        StudySessionResponse response = studySessionMapper.toResponse(updated);
+        response.setSessionXp(gamificationResult.sessionXp());
+        response.setBadgeBonusXp(gamificationResult.badgeBonusXp());
+        response.setTotalXp(gamificationResult.totalXp());
+        response.setXpEarned(gamificationResult.totalXp());
+        if (gamificationResult.unlockedBadges() != null && !gamificationResult.unlockedBadges().isEmpty()) {
+            response.setUnlockedBadges(gamificationResult.unlockedBadges().stream().map(badgeMapper::toResponse).toList());
+        }
+        return response;
     }
 
     @Transactional

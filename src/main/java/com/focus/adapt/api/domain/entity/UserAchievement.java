@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +21,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "user_achievements")
+@Table(
+    name = "user_achievements",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_user_achievements_user_badge",
+        columnNames = {"user_id", "badge_id"}
+    )
+)
 public class UserAchievement extends BaseEntity {
 
     @Column(name = "unlocked_at", nullable = false)

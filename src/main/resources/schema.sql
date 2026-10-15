@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     break_duration_minutes INTEGER NOT NULL DEFAULT 0,
     completed_cycles INTEGER NOT NULL DEFAULT 0,
     total_pauses_count INTEGER NOT NULL DEFAULT 0,
+    xp_awarded INTEGER NOT NULL DEFAULT 0,
     deleted BOOLEAN NOT NULL DEFAULT false,
     user_id UUID NOT NULL,
     study_plan_id UUID,
@@ -134,8 +135,12 @@ CREATE TABLE IF NOT EXISTS user_missions (
 
 CREATE TABLE IF NOT EXISTS badges (
     id UUID NOT NULL PRIMARY KEY,
+    code VARCHAR(64) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    threshold INTEGER NOT NULL,
+    xp_reward INTEGER NOT NULL DEFAULT 0,
     icon_url VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -149,8 +154,35 @@ CREATE TABLE IF NOT EXISTS user_achievements (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (badge_id) REFERENCES badges(id)
+    FOREIGN KEY (badge_id) REFERENCES badges(id),
+    CONSTRAINT uk_user_achievements_user_badge UNIQUE (user_id, badge_id)
 );
+
+-- Seed das badges iniciais (idempotente)
+INSERT INTO badges (id, code, name, description, category, threshold, xp_reward, icon_url)
+VALUES
+    ('a0000000-0000-0000-0000-000000000001', 'STUDY_PLAN_1', 'Primeiro Plano', 'Conclua seu primeiro plano de estudos.', 'STUDY_PLAN', 1, 20, '/badge-icons/study-plan-1.png'),
+    ('a0000000-0000-0000-0000-000000000002', 'STUDY_PLAN_3', 'Tríade de Estudos', 'Conclua 3 planos de estudos.', 'STUDY_PLAN', 3, 50, '/badge-icons/study-plan-3.png'),
+    ('a0000000-0000-0000-0000-000000000003', 'STUDY_PLAN_10', 'Mestre do Planejamento', 'Conclua 10 planos de estudos.', 'STUDY_PLAN', 10, 150, '/badge-icons/study-plan-10.png'),
+    ('a0000000-0000-0000-0000-000000000004', 'STUDY_PLAN_25', 'Arquiteto do Foco', 'Conclua 25 planos de estudos.', 'STUDY_PLAN', 25, 300, '/badge-icons/study-plan-25.png'),
+
+    ('a0000000-0000-0000-0000-000000000005', 'STUDY_TASK_1', 'Primeiro Passo', 'Conclua sua primeira tarefa de estudo.', 'STUDY_TASK', 1, 20, '/badge-icons/study-task-1.png'),
+    ('a0000000-0000-0000-0000-000000000006', 'STUDY_TASK_10', 'Rumo ao Progresso', 'Conclua 10 tarefas de estudo distintas.', 'STUDY_TASK', 10, 50, '/badge-icons/study-task-10.png'),
+    ('a0000000-0000-0000-0000-000000000007', 'STUDY_TASK_50', 'Produtividade Pura', 'Conclua 50 tarefas de estudo distintas.', 'STUDY_TASK', 50, 150, '/badge-icons/study-task-50.png'),
+    ('a0000000-0000-0000-0000-000000000008', 'STUDY_TASK_100', 'Centenário do Conhecimento', 'Conclua 100 tarefas de estudo distintas.', 'STUDY_TASK', 100, 300, '/badge-icons/study-task-100.png'),
+
+    ('a0000000-0000-0000-0000-000000000009', 'STUDY_TIME_60', 'Hora de Ouro', 'Dedique 60 minutos de estudo com foco.', 'STUDY_TIME', 60, 20, '/badge-icons/study-time-60.png'),
+    ('a0000000-0000-0000-0000-000000000010', 'STUDY_TIME_300', 'Imersão Profunda', 'Dedique 300 minutos (5 horas) de estudo com foco.', 'STUDY_TIME', 300, 50, '/badge-icons/study-time-300.png'),
+    ('a0000000-0000-0000-0000-000000000011', 'STUDY_TIME_1500', 'Mente Disciplinada', 'Dedique 1.500 minutos (25 horas) de estudo com foco.', 'STUDY_TIME', 1500, 150, '/badge-icons/study-time-1500.png'),
+    ('a0000000-0000-0000-0000-000000000012', 'STUDY_TIME_6000', 'Mestre da Dedicação', 'Dedique 6.000 minutos (100 horas) de estudo com foco.', 'STUDY_TIME', 6000, 300, '/badge-icons/study-time-6000.png')
+ON CONFLICT (code) DO UPDATE SET
+    name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    category = EXCLUDED.category,
+    threshold = EXCLUDED.threshold,
+    xp_reward = EXCLUDED.xp_reward,
+    icon_url = EXCLUDED.icon_url,
+    updated_at = CURRENT_TIMESTAMP;
 
 CREATE TABLE IF NOT EXISTS points_history (
     id UUID NOT NULL PRIMARY KEY,

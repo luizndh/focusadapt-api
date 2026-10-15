@@ -21,10 +21,16 @@ public interface StudySessionMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "studyPlan", ignore = true)
     @Mapping(target = "studyTasks", ignore = true)
+    @Mapping(target = "xpAwarded", ignore = true)
     StudySession toEntity(StudySessionRequest request);
 
     @Mapping(source = "studyPlan.id", target = "studyPlanId")
     @Mapping(source = "studyTasks", target = "studyTaskIds", qualifiedByName = "mapTasksToIds")
+    @Mapping(source = "xpAwarded", target = "xpEarned")
+    @Mapping(source = "xpAwarded", target = "totalXp")
+    @Mapping(target = "sessionXp", ignore = true)
+    @Mapping(target = "badgeBonusXp", ignore = true)
+    @Mapping(target = "unlockedBadges", ignore = true)
     StudySessionResponse toResponse(StudySession entity);
 
     @Named("mapTasksToIds")

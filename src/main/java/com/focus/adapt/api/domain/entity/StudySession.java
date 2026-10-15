@@ -83,6 +83,10 @@ public class StudySession extends BaseEntity {
     @Builder.Default
     private int totalPausesCount = 0;
 
+    @Column(name = "xp_awarded", nullable = false)
+    @Builder.Default
+    private int xpAwarded = 0;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean deleted = false;

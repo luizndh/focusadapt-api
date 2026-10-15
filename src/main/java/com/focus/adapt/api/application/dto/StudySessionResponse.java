@@ -33,6 +33,12 @@ public class StudySessionResponse {
     private int totalPausesCount;
     private UUID studyPlanId;
     private List<UUID> studyTaskIds;
+    private int sessionXp;
+    private int badgeBonusXp;
+    private int totalXp;
+    private int xpEarned;
+    @Builder.Default
+    private List<BadgeResponse> unlockedBadges = new java.util.ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

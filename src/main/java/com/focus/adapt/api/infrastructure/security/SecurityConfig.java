@@ -47,7 +47,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/webjars/**",
                                 "/actuator/health",
-                                "/actuator/info"
+                                "/actuator/info",
+                                "/badge-icons/**"
                         ).permitAll()
                         // Restrict other monitoring endpoints to administrative users
                         .requestMatchers("/actuator/**").hasRole("ADMIN")

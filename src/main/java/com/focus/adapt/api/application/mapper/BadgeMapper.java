@@ -21,8 +21,12 @@ public interface BadgeMapper {
     BadgeResponse toResponse(Badge entity);
 
     @Mapping(source = "badge.id", target = "badgeId")
+    @Mapping(source = "badge.code", target = "badgeCode")
     @Mapping(source = "badge.name", target = "badgeName")
     @Mapping(source = "badge.description", target = "badgeDescription")
+    @Mapping(source = "badge.category", target = "badgeCategory")
+    @Mapping(source = "badge.threshold", target = "badgeThreshold")
+    @Mapping(source = "badge.xpReward", target = "badgeXpReward")
     @Mapping(source = "badge.iconUrl", target = "badgeIconUrl")
     UserAchievementResponse toResponse(UserAchievement entity);
 }

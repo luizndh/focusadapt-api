@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD} # Change this in real deployment
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - pgdata_prod:/var/lib/postgresql/data
     healthcheck:
@@ -36,6 +36,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      BADGE_ICONS_PATH: /app/badge-icons/
+    volumes:
+      - /home/luiz/focusadapt/badge-icons:/app/badge-icons:ro
     depends_on:
       postgres:
         condition: service_healthy
