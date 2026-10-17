@@ -23,10 +23,10 @@ class PromptBuilderTest {
 
         assertTrue(prompt.contains("PERFECTIONIST"), "Prompt should mention perfectionist profile");
         assertTrue(prompt.contains("Java Streams"), "Prompt should contain the topic");
-        assertTrue(prompt.contains("15 minutes"), "Prompt should contain available minutes");
+        assertTrue(prompt.contains("15 minutos"), "Prompt should contain available minutes");
         assertTrue(prompt.contains("scheduledDate"), "Prompt schema should include scheduledDate");
-        assertTrue(prompt.contains("15 to 45 minutes"), "Prompt should enforce duration guidelines");
-        assertTrue(prompt.contains("gradual progression"), "Prompt should include perfectionist curriculum guidelines");
+        assertTrue(prompt.contains("15 a 45 minutos"), "Prompt should enforce duration guidelines");
+        assertTrue(prompt.contains("progressão gradual"), "Prompt should include perfectionist curriculum guidelines");
     }
 
     @Test
@@ -42,9 +42,9 @@ class PromptBuilderTest {
 
         assertTrue(prompt.contains("STIMULUS_SEEKER"), "Prompt should mention stimulus seeker profile");
         assertTrue(prompt.contains("Java Streams"), "Prompt should contain the topic");
-        assertTrue(prompt.contains("2 hours"), "Prompt should contain available hours/minutes");
+        assertTrue(prompt.contains("2 horas"), "Prompt should contain available hours/minutes");
         assertTrue(prompt.contains("scheduledDate"), "Prompt schema should include scheduledDate");
-        assertTrue(prompt.contains("alternating between foundational theory and immediate practical applications"), "Prompt should include stimulus seeker curriculum guidelines");
+        assertTrue(prompt.contains("alternando entre teoria fundamental e aplicações práticas imediatas"), "Prompt should include stimulus seeker curriculum guidelines");
     }
 
     @Test
@@ -120,12 +120,12 @@ class PromptBuilderTest {
                 ProcrastinationProfile.PERFECTIONIST
         );
 
-        assertTrue(prompt.contains("attached PDF document"));
+        assertTrue(prompt.contains("documento PDF anexado"));
         assertTrue(prompt.contains("Redes de Computadores"));
         assertTrue(prompt.contains("PERFECTIONIST"));
         assertTrue(prompt.contains("scheduledDate"));
-        assertTrue(prompt.contains("30 minutes"));
-        assertTrue(prompt.contains("gradual progression"));
+        assertTrue(prompt.contains("30 minutos"));
+        assertTrue(prompt.contains("progressão gradual"));
     }
 
     @Test
@@ -139,10 +139,10 @@ class PromptBuilderTest {
                 ProcrastinationProfile.STIMULUS_SEEKER
         );
 
-        assertTrue(prompt.contains("attached PDF document"));
+        assertTrue(prompt.contains("documento PDF anexado"));
         assertTrue(prompt.contains("Estruturas de Dados"));
         assertTrue(prompt.contains("STIMULUS_SEEKER"));
-        assertTrue(prompt.contains("1 hour (60 minutes)"));
-        assertTrue(prompt.contains("alternating between foundational theory and immediate practical applications"));
+        assertTrue(prompt.contains("1 hora (60 minutos)"));
+        assertTrue(prompt.contains("alternando entre teoria fundamental e aplicações práticas imediatas"));
     }
 }

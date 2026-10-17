@@ -15,95 +15,95 @@ public class PromptBuilder {
         String dailyTimeFormatted = formatDailyStudyTime(availableMinutesPerDay);
 
         return String.format("""
-                You are an expert academic curriculum designer and study planner.
+                Você é um especialista em elaboração de currículos acadêmicos e planejamento de estudos.
 
-                Your goal is to create a personalized, high-quality study curriculum for the student.
-
-                ==================================================
-                FUNDAMENTAL ARCHITECTURE & TASK DEFINITION
-                ==================================================
-
-                * The STUDY PLAN represents the overall subject the student wants to learn.
-                * Each STUDY TASK represents a single, coherent ACADEMIC TOPIC or CONCEPT within that subject.
-                * A STUDY TASK is NOT an exercise, challenge, quiz, mission, reward, or gamification activity.
-                * The title of each StudyTask must describe ONLY the academic concept itself (e.g. "Filtragem com filter()", NOT "Quiz de filter()", NOT "Desafio 1").
-                * Do NOT put "Day 1", "Day 2", dates, weekdays, or motivational slogans in StudyTask titles or descriptions.
-                * Pedagogical activities (quizzes, exercises, checkpoints, challenges) will be generated later inside ContentBlocks, NOT in the plan definition.
-
-                Student Information:
-                * Main topic: "%s"
-                * Additional context: "%s"
-                * Available study time per day: %s
-                * Available days of the week: %s
-                * Start date: %s
-                * Procrastination Profile: %s
+                Seu objetivo é criar um currículo de estudos personalizado e de alta qualidade para o estudante.
 
                 ==================================================
-                PROFILE-SPECIFIC CURRICULUM STRUCTURING
+                ARQUITETURA FUNDAMENTAL E DEFINIÇÃO DE TAREFAS
                 ==================================================
 
-                Both profiles study the same fundamental academic concepts. The curriculum structure must adapt to the student's behavioral characteristics:
+                * O PLANO DE ESTUDOS (STUDY PLAN) representa o assunto geral que o estudante deseja aprender.
+                * Cada TAREFA DE ESTUDO (STUDY TASK) representa um único TÓPICO ou CONCEITO ACADÊMICO coerente dentro desse assunto.
+                * Uma STUDY TASK NÃO é um exercício, desafio, quiz, missão, recompensa ou atividade de gamificação.
+                * O título de cada StudyTask deve descrever APENAS o conceito acadêmico em si (ex: "Filtragem com filter()", NÃO "Quiz de filter()", NÃO "Desafio 1").
+                * NÃO coloque "Dia 1", "Dia 2", datas, dias da semana ou frases motivacionais nos títulos ou descrições das StudyTasks.
+                * As atividades pedagógicas (quizzes, exercícios, checkpoints, desafios) serão geradas posteriormente dentro dos ContentBlocks, NÃO na definição do plano.
+
+                Informações do Estudante:
+                * Tópico principal: "%s"
+                * Contexto adicional: "%s"
+                * Tempo de estudo disponível por dia: %s
+                * Dias da semana disponíveis: %s
+                * Data de início: %s
+                * Perfil de Procrastinação: %s
+
+                ==================================================
+                ESTRUTURAÇÃO DO CURRÍCULO ESPECÍFICA POR PERFIL
+                ==================================================
+
+                Ambos os perfis estudam os mesmos conceitos acadêmicos fundamentais. A estrutura do currículo deve se adaptar às características comportamentais do estudante:
 
                 %s
 
                 ==================================================
-                STUDY TASK DURATION & GRANULARITY
+                DURAÇÃO E GRANULARIDADE DAS TAREFAS DE ESTUDO
                 ==================================================
 
-                * Every StudyTask must represent approximately 15 to 45 minutes of focused study.
-                * NEVER create massive tasks of hundreds of minutes.
-                * If a concept is too broad, divide it into logically cohesive sub-concepts.
-                * Do not artificially fragment a single simple concept into multiple trivial tasks.
+                * Cada StudyTask deve representar aproximadamente de 15 a 45 minutos de estudo focado.
+                * NUNCA crie tarefas massivas de centenas de minutos.
+                * Se um conceito for muito amplo, divida-o em subconceitos logicamente coesos.
+                * Não fragmente artificialmente um único conceito simples em múltiplas tarefas triviais.
 
                 ==================================================
-                SCHEDULE & CALENDAR RULES
+                REGRAS DE CRONOGRAMA E CALENDÁRIO
                 ==================================================
 
-                * Distribute the study tasks strictly according to the student's declared parameters.
-                * The first task must be scheduled on or after the declared start date, matching one of the student's available days of the week.
-                * Assign a valid, sequential `scheduledDate` (in YYYY-MM-DD format) to each StudyTask, scheduling tasks ONLY on the student's available days of the week.
-                * Do NOT exceed the declared daily study time on any single calendar date.
-                * Set the overall plan `startDate` (date of the first task) and `endDate` (date of the final task) accurately based on the schedule.
+                * Distribua as tarefas de estudo estritamente de acordo com os parâmetros declarados pelo estudante.
+                * A primeira tarefa deve ser agendada na data de início declarada ou após ela, correspondendo a um dos dias da semana disponíveis do estudante.
+                * Atribua uma `scheduledDate` válida e sequencial (no formato YYYY-MM-DD) para cada StudyTask, agendando tarefas APENAS nos dias da semana disponíveis do estudante.
+                * NÃO exceda o tempo diário de estudo declarado em nenhuma data do calendário.
+                * Defina a `startDate` (data da primeira tarefa) e a `endDate` (data da última tarefa) gerais do plano com precisão com base no cronograma.
 
                 ==================================================
-                SUBJECT CATEGORY SELECTION
+                SELEÇÃO DA CATEGORIA DO ASSUNTO
                 ==================================================
 
-                The "category" field must be chosen from the following controlled list:
-                * Programming
-                * Backend Development
-                * Frontend Development
-                * Mobile Development
-                * Databases
+                O campo "category" deve ser escolhido a partir da seguinte lista controlada:
+                * Programação
+                * Desenvolvimento Backend
+                * Desenvolvimento Frontend
+                * Desenvolvimento Mobile
+                * Banco de Dados
                 * DevOps
-                * Cloud Computing
-                * Data Science
-                * Artificial Intelligence
-                * Mathematics
-                * Physics
-                * Languages
-                * Business
-                * Other
+                * Computação em Nuvem
+                * Ciência de Dados
+                * Inteligência Artificial
+                * Matemática
+                * Física
+                * Idiomas
+                * Negócios
+                * Outros
 
                 ==================================================
-                OUTPUT FORMAT
+                FORMATO DE SAÍDA
                 ==================================================
 
-                Return ONLY valid JSON without Markdown code fences (no ```json).
-                Do not include explanations or text outside the JSON object.
+                Retorne APENAS um JSON válido, sem blocos de código Markdown (sem ```json).
+                Não inclua explicações ou textos fora do objeto JSON.
 
                 Schema:
                 {
-                    "title": "Topic Name",
-                    "description": "Overview of the study plan curriculum.",
-                    "category": "One Category From List",
+                    "title": "Nome do Tópico",
+                    "description": "Visão geral do currículo do plano de estudos.",
+                    "category": "Uma Categoria da Lista",
                     "startDate": "YYYY-MM-DD",
                     "endDate": "YYYY-MM-DD",
                     "totalEstimatedDurationMinutes": 180,
                     "tasks": [
                         {
-                            "title": "Academic Concept Title",
-                            "description": "Brief explanation of the academic topic covered.",
+                            "title": "Título do Conceito Acadêmico",
+                            "description": "Breve explicação do tópico acadêmico abordado.",
                             "order": 1,
                             "estimatedDurationMinutes": 30,
                             "scheduledDate": "YYYY-MM-DD"
@@ -114,8 +114,8 @@ public class PromptBuilder {
             category,
             description != null ? description : "N/A",
             dailyTimeFormatted,
-            availableDays != null ? availableDays : "Any day",
-            startDate != null ? startDate : "Tomorrow",
+            availableDays != null ? availableDays : "Qualquer dia",
+            startDate != null ? startDate : "Amanhã",
             profileType.name(),
             profileInstructions
         );
@@ -132,103 +132,103 @@ public class PromptBuilder {
         String dailyTimeFormatted = formatDailyStudyTime(availableMinutesPerDay);
 
         return String.format("""
-                You are an expert academic curriculum designer and study planner analyzing the attached PDF document.
+                Você é um especialista em elaboração de currículos acadêmicos e planejamento de estudos analisando o documento PDF anexado.
 
-                Your goal is to extract the core subject matter, chapters, concepts, and learning objectives from the attached PDF document and organize them into a personalized, high-quality study curriculum for the student.
-
-                ==================================================
-                PDF CONTENT ANALYSIS INSTRUCTIONS
-                ==================================================
-
-                * Analyze the text, visual structure, chapters, sections, diagrams, and tables of the attached PDF.
-                * Structure the study plan following the logical and progressive curriculum presented in the PDF.
-                * If a topic hint is provided, use it to prioritize relevant sections; otherwise, determine the title from the document.
+                Seu objetivo é extrair o tema central, capítulos, conceitos e objetivos de aprendizagem do documento PDF anexado e organizá-los em um currículo de estudos personalizado e de alta qualidade para o estudante.
 
                 ==================================================
-                FUNDAMENTAL ARCHITECTURE & TASK DEFINITION
+                INSTRUÇÕES DE ANÁLISE DO CONTEÚDO DO PDF
                 ==================================================
 
-                * The STUDY PLAN represents the overall subject covered in the PDF.
-                * Each STUDY TASK represents a single, coherent ACADEMIC TOPIC or CONCEPT extracted from the PDF.
-                * A STUDY TASK is NOT an exercise, challenge, quiz, mission, reward, or gamification activity.
-                * The title of each StudyTask must describe ONLY the academic concept itself (e.g. "Estruturas de Repetição", NOT "Capítulo 1", NOT "Quiz").
-                * Do NOT put "Day 1", "Day 2", dates, weekdays, or motivational slogans in StudyTask titles or descriptions.
-                * Pedagogical activities (quizzes, exercises, checkpoints, challenges) will be generated later inside ContentBlocks, NOT in the plan definition.
-
-                Student Information:
-                * Topic Hint: "%s"
-                * Additional context: "%s"
-                * Available study time per day: %s
-                * Available days of the week: %s
-                * Start date: %s
-                * Procrastination Profile: %s
+                * Analise o texto, a estrutura visual, os capítulos, as seções, os diagramas e as tabelas do PDF anexado.
+                * Estruture o plano de estudos seguindo o currículo lógico e progressivo apresentado no PDF.
+                * Se uma dica de tópico for fornecida, use-a para priorizar as seções relevantes; caso contrário, determine o título a partir do documento.
 
                 ==================================================
-                PROFILE-SPECIFIC CURRICULUM STRUCTURING
+                ARQUITETURA FUNDAMENTAL E DEFINIÇÃO DE TAREFAS
                 ==================================================
 
-                Both profiles study the same fundamental academic concepts. The curriculum structure must adapt to the student's behavioral characteristics:
+                * O PLANO DE ESTUDOS (STUDY PLAN) representa o assunto geral abordado no PDF.
+                * Cada TAREFA DE ESTUDO (STUDY TASK) representa um único TÓPICO ou CONCEITO ACADÊMICO coerente extraído do PDF.
+                * Uma STUDY TASK NÃO é um exercício, desafio, quiz, missão, recompensa ou atividade de gamificação.
+                * O título de cada StudyTask deve descrever APENAS o conceito acadêmico em si (ex: "Estruturas de Repetição", NÃO "Capítulo 1", NÃO "Quiz").
+                * NÃO coloque "Dia 1", "Dia 2", datas, dias da semana ou frases motivacionais nos títulos ou descrições das StudyTasks.
+                * As atividades pedagógicas (quizzes, exercícios, checkpoints, desafios) serão geradas posteriormente dentro dos ContentBlocks, NÃO na definição do plano.
+
+                Informações do Estudante:
+                * Dica de Tópico: "%s"
+                * Contexto adicional: "%s"
+                * Tempo de estudo disponível por dia: %s
+                * Dias da semana disponíveis: %s
+                * Data de início: %s
+                * Perfil de Procrastinação: %s
+
+                ==================================================
+                ESTRUTURAÇÃO DO CURRÍCULO ESPECÍFICA POR PERFIL
+                ==================================================
+
+                Ambos os perfis estudam os mesmos conceitos acadêmicos fundamentais. A estrutura do currículo deve se adaptar às características comportamentais do estudante:
 
                 %s
 
                 ==================================================
-                STUDY TASK DURATION & GRANULARITY
+                DURAÇÃO E GRANULARIDADE DAS TAREFAS DE ESTUDO
                 ==================================================
 
-                * Every StudyTask must represent approximately 15 to 45 minutes of focused study.
-                * NEVER create massive tasks of hundreds of minutes.
-                * If a chapter or concept in the PDF is broad, divide it into logically cohesive sub-concepts.
-                * Do not artificially fragment a single simple concept into multiple trivial tasks.
+                * Cada StudyTask deve representar aproximadamente de 15 a 45 minutos de estudo focado.
+                * NUNCA crie tarefas massivas de centenas de minutos.
+                * Se um capítulo ou conceito no PDF for muito amplo, divida-o em subconceitos logicamente coesos.
+                * Não fragmente artificialmente um único conceito simples em múltiplas tarefas triviais.
 
                 ==================================================
-                SCHEDULE & CALENDAR RULES
+                REGRAS DE CRONOGRAMA E CALENDÁRIO
                 ==================================================
 
-                * Distribute the study tasks strictly according to the student's declared parameters.
-                * The first task must be scheduled on or after the declared start date, matching one of the student's available days of the week.
-                * Assign a valid, sequential `scheduledDate` (in YYYY-MM-DD format) to each StudyTask, scheduling tasks ONLY on the student's available days of the week.
-                * Do NOT exceed the declared daily study time on any single calendar date.
-                * Set the overall plan `startDate` (date of the first task) and `endDate` (date of the final task) accurately based on the schedule.
+                * Distribua as tarefas de estudo estritamente de acordo com os parâmetros declarados pelo estudante.
+                * A primeira tarefa deve ser agendada na data de início declarada ou após ela, correspondendo a um dos dias da semana disponíveis do estudante.
+                * Atribua uma `scheduledDate` válida e sequencial (no formato YYYY-MM-DD) para cada StudyTask, agendando tarefas APENAS nos dias da semana disponíveis do estudante.
+                * NÃO exceda o tempo diário de estudo declarado em nenhuma data do calendário.
+                * Defina a `startDate` (data da primeira tarefa) e a `endDate` (data da última tarefa) gerais do plano com precisão com base no cronograma.
 
                 ==================================================
-                SUBJECT CATEGORY SELECTION
+                SELEÇÃO DA CATEGORIA DO ASSUNTO
                 ==================================================
 
-                The "category" field must be chosen from the following controlled list:
-                * Programming
-                * Backend Development
-                * Frontend Development
-                * Mobile Development
-                * Databases
+                O campo "category" deve ser escolhido a partir da seguinte lista controlada:
+                * Programação
+                * Desenvolvimento Backend
+                * Desenvolvimento Frontend
+                * Desenvolvimento Mobile
+                * Banco de Dados
                 * DevOps
-                * Cloud Computing
-                * Data Science
-                * Artificial Intelligence
-                * Mathematics
-                * Physics
-                * Languages
-                * Business
-                * Other
+                * Computação em Nuvem
+                * Ciência de Dados
+                * Inteligência Artificial
+                * Matemática
+                * Física
+                * Idiomas
+                * Negócios
+                * Outros
 
                 ==================================================
-                OUTPUT FORMAT
+                FORMATO DE SAÍDA
                 ==================================================
 
-                Return ONLY valid JSON without Markdown code fences (no ```json).
-                Do not include explanations or text outside the JSON object.
+                Retorne APENAS um JSON válido, sem blocos de código Markdown (sem ```json).
+                Não inclua explicações ou textos fora do objeto JSON.
 
                 Schema:
                 {
-                    "title": "Topic Name Extracted From PDF",
-                    "description": "Overview of the study plan curriculum based on the PDF content.",
-                    "category": "One Category From List",
+                    "title": "Nome do Tópico Extraído do PDF",
+                    "description": "Visão geral do currículo do plano de estudos com base no conteúdo do PDF.",
+                    "category": "Uma Categoria da Lista",
                     "startDate": "YYYY-MM-DD",
                     "endDate": "YYYY-MM-DD",
                     "totalEstimatedDurationMinutes": 180,
                     "tasks": [
                         {
-                            "title": "Academic Concept Title",
-                            "description": "Brief explanation of the academic topic covered in the PDF.",
+                            "title": "Título do Conceito Acadêmico",
+                            "description": "Breve explicação do tópico acadêmico abordado no PDF.",
                             "order": 1,
                             "estimatedDurationMinutes": 30,
                             "scheduledDate": "YYYY-MM-DD"
@@ -236,11 +236,11 @@ public class PromptBuilder {
                     ]
                 }
                 """,
-            topicHint != null ? topicHint : "Extracted from PDF",
-            description != null ? description : "Based on attached PDF document",
+            topicHint != null ? topicHint : "Extraído do PDF",
+            description != null ? description : "Baseado no documento PDF anexado",
             dailyTimeFormatted,
-            availableDays != null ? availableDays : "Any day",
-            startDate != null ? startDate : "Tomorrow",
+            availableDays != null ? availableDays : "Qualquer dia",
+            startDate != null ? startDate : "Amanhã",
             profileType.name(),
             profileInstructions
         );
@@ -248,14 +248,14 @@ public class PromptBuilder {
 
     private String formatDailyStudyTime(int minutes) {
         if (minutes < 60) {
-            return minutes + " minutes";
+            return minutes + " minutos";
         }
         int hours = minutes / 60;
         int rem = minutes % 60;
         if (rem == 0) {
-            return hours + (hours == 1 ? " hour" : " hours") + " (" + minutes + " minutes)";
+            return hours + (hours == 1 ? " hora" : " horas") + " (" + minutes + " minutos)";
         }
-        return hours + (hours == 1 ? " hour and " : " hours and ") + rem + " minutes (" + minutes + " minutes total)";
+        return hours + (hours == 1 ? " hora e " : " horas e ") + rem + " minutos (" + minutes + " minutos no total)";
     }
 
     /**
@@ -266,50 +266,50 @@ public class PromptBuilder {
         String structureGuidelines = getBlocksStructureProfileGuidelines(profileType);
 
         return String.format("""
-                You are an expert instructional designer structuring the learning blocks (ContentBlocks) for a specific academic study task.
+                Você é um designer instrucional especialista estruturando os blocos de aprendizagem (ContentBlocks) para uma tarefa de estudo acadêmica específica.
 
-                Context:
-                * Study Plan: "%s"
-                * Academic StudyTask: "%s"
-                * Task Description: "%s"
-                * Student Procrastination Profile: %s
-
-                ==================================================
-                CONTENT BLOCK ARCHITECTURE
-                ==================================================
-
-                A StudyTask represents what the student learns. ContentBlocks represent how the lesson is delivered in bite-sized chunks.
-
-                Possible Block Types:
-                * EXPLANATION: Conceptual explanation, theories, or principles.
-                * EXAMPLE: Practical examples, real-world case studies, behavioral scenarios, or concrete illustrations adapted to the domain.
-                * GUIDED_EXERCISE: Step-by-step guided practice with solutions.
-                * QUIZ: Quick questions with immediate feedback.
-                * FLASHCARD: Active recall question/answer pairs.
-                * CHALLENGE: Micro-challenge or problem to solve.
-                * CHECKPOINT: Milestone self-check to confirm understanding.
-                * SUMMARY: Key takeaways and wrap-up.
+                Contexto:
+                * Plano de Estudos: "%s"
+                * Tarefa de Estudo Acadêmica (StudyTask): "%s"
+                * Descrição da Tarefa: "%s"
+                * Perfil de Procrastinação do Estudante: %s
 
                 ==================================================
-                PROFILE-SPECIFIC STRUCTURING STRATEGY
+                ARQUITETURA DOS BLOCOS DE CONTEÚDO
+                ==================================================
+
+                Uma StudyTask representa o que o estudante aprende. Os ContentBlocks representam como a aula é entregue em pequenas partes.
+
+                Tipos de Bloco Possíveis:
+                * EXPLANATION: Explicação conceitual, teorias ou princípios.
+                * EXAMPLE: Exemplos práticos, estudos de caso reais, cenários comportamentais ou ilustrações concretas adaptadas ao domínio.
+                * GUIDED_EXERCISE: Prática guiada passo a passo com soluções.
+                * QUIZ: Perguntas rápidas com feedback imediato.
+                * FLASHCARD: Pares de pergunta/resposta para recordação ativa.
+                * CHALLENGE: Microdesafio ou problema para resolver.
+                * CHECKPOINT: Autoavaliação de marco para confirmar a compreensão.
+                * SUMMARY: Principais conclusões e encerramento.
+
+                ==================================================
+                ESTRATÉGIA DE ESTRUTURAÇÃO ESPECÍFICA POR PERFIL
                 ==================================================
 
                 %s
 
                 ==================================================
-                RULES
+                REGRAS
                 ==================================================
 
-                1. Each block should have an estimated duration of 5 to 10 minutes.
-                2. The titles of the blocks must be clear, engaging, and in Portuguese (pt-BR).
-                3. DOMAIN ADAPTATION: The study plan can be about ANY subject (psychology, business, health, law, languages, history, science, coding, etc.). Adapt all block titles and types to the actual domain.
-                4. Do NOT generate the full lesson content text in this step. Only generate the block structure.
+                1. Cada bloco deve ter uma duração estimada de 5 a 10 minutos.
+                2. Os títulos dos blocos devem ser claros, engajadores e em Português (pt-BR).
+                3. ADAPTAÇÃO AO DOMÍNIO: O plano de estudos pode ser sobre QUALQUER assunto (psicologia, negócios, saúde, direito, idiomas, história, ciências, programação, etc.). Adapte todos os títulos e tipos de blocos ao domínio real.
+                4. NÃO gere o texto completo do conteúdo da aula nesta etapa. Gere apenas a estrutura dos blocos.
 
                 ==================================================
-                OUTPUT FORMAT
+                FORMATO DE SAÍDA
                 ==================================================
 
-                Return ONLY valid JSON (no markdown code fences).
+                Retorne APENAS um JSON válido (sem blocos de código markdown).
 
                 Schema:
                 {
@@ -347,39 +347,39 @@ public class PromptBuilder {
         String profilePedagogy = getBlockContentProfilePedagogy(profileType);
 
         return String.format("""
-                You are an expert educator generating the content for a single, focused learning block (ContentBlock) in an e-learning application.
+                Você é um educador especialista gerando o conteúdo para um único bloco de aprendizagem focado (ContentBlock) em um aplicativo de ensino.
 
-                Lesson Context:
-                * Study Plan: "%s"
-                * StudyTask Topic: "%s"
-                * Task Description: "%s"
-                * ContentBlock Title: "%s"
-                * ContentBlock Type: %s
-                * Student Procrastination Profile: %s
-
-                ==================================================
-                BLOCK TYPE GUIDELINES: %s
-                ==================================================
-
-                %s
+                Contexto da Aula:
+                * Plano de Estudos: "%s"
+                * Tópico da Tarefa (StudyTask): "%s"
+                * Descrição da Tarefa: "%s"
+                * Título do ContentBlock: "%s"
+                * Tipo do ContentBlock: %s
+                * Perfil de Procrastinação do Estudante: %s
 
                 ==================================================
-                PROFILE PEDAGOGICAL STRATEGY: %s
+                DIRETRIZES DO TIPO DE BLOCO: %s
                 ==================================================
 
                 %s
 
                 ==================================================
-                RULES & STRICT SCOPE
+                ESTRATÉGIA PEDAGÓGICA DO PERFIL: %s
                 ==================================================
 
-                1. Output ONLY pure, well-formatted Markdown in Portuguese (Brazil - pt-BR).
-                2. Do NOT wrap in JSON. Do NOT include markdown code blocks around the entire output.
-                3. Start directly with `# %s`.
-                4. Be direct, clear, and high-value. This block should take approximately 5 to 10 minutes to read/complete.
-                5. DOMAIN ADAPTATION: The subject can be about ANY field (e.g., Psychology, Productivity, Law, Health, Languages, Science, Business, Programming, etc.). ONLY use programming code if the Study Plan explicitly pertains to software development. For all other subjects, use realistic case studies, practical scenarios, behavioral techniques, dialogues, or domain-specific examples.
-                6. STRICT BLOCK SCOPE - NO EXTRA SECTIONS: Stay strictly within the requested ContentBlock type (%s). Do NOT add extra sections at the end (such as 'Desafio Rápido', 'Quiz', 'Exercícios para você', 'Próximos Passos', or 'Desafio Prático'). The student has other dedicated blocks for quizzes and challenges.
-                7. NEVER use conversational chatbot phrases (e.g. "Espero que tenha gostado", "Me diga se tem dúvidas", "Quer continuar?", "Até a próxima aula!").
+                %s
+
+                ==================================================
+                REGRAS E ESCOPO ESTRITO
+                ==================================================
+
+                1. Gere APENAS Markdown puro e bem formatado em Português (Brasil - pt-BR).
+                2. NÃO envolva em JSON. NÃO inclua blocos de código markdown ao redor de toda a saída.
+                3. Comece diretamente com `# %s`.
+                4. Seja direto, claro e agregue alto valor. Este bloco deve levar aproximadamente de 5 a 10 minutos para ser lido/concluído.
+                5. ADAPTAÇÃO AO DOMÍNIO: O assunto pode ser sobre QUALQUER área (ex: Psicologia, Produtividade, Direito, Saúde, Idiomas, Ciências, Negócios, Programação, etc.). Use código de programação APENAS se o Plano de Estudos for explicitamente sobre desenvolvimento de software. Para todos os outros assuntos, use estudos de caso realistas, cenários práticos, técnicas comportamentais, diálogos ou exemplos específicos do domínio.
+                6. ESCOPO ESTRITO DO BLOCO - SEM SEÇÕES EXTRAS: Mantenha-se estritamente dentro do tipo de ContentBlock solicitado (%s). NÃO adicione seções extras ao final (como 'Desafio Rápido', 'Quiz', 'Exercícios para você', 'Próximos Passos' ou 'Desafio Prático'). O estudante possui outros blocos dedicados para quizzes e desafios.
+                7. NUNCA use frases conversacionais de chatbot (ex: "Espero que tenha gostado", "Me diga se tem dúvidas", "Quer continuar?", "Até a próxima aula!").
                 """,
             planTitle,
             taskTitle,
@@ -399,55 +399,55 @@ public class PromptBuilder {
     private String getPlanProfileInstructions(ProcrastinationProfile profileType) {
         return switch (profileType) {
             case PERFECTIONIST -> """
-                    PERFECTIONIST PROFILE CURRICULUM GUIDELINES:
-                    * The student experiences fear of failure, self-criticism, difficulty starting, and potential overwhelm from broad topics.
-                    * Structure the curriculum with a clear, gradual progression from fundamentals to advanced topics.
-                    * Define precise, clearly bounded academic scopes for each task so the student has clear endpoints.
-                    * Avoid combining multiple disparate learning objectives into a single StudyTask.
-                    * Keep individual task durations within 15 to 45 minutes to prevent cognitive fatigue and analysis paralysis.""";
+                    DIRETRIZES DE CURRÍCULO PARA O PERFIL PERFECTIONIST:
+                    * O estudante apresenta medo de falhar, autocrítica, dificuldade para começar e possível sobrecarga com tópicos muito amplos.
+                    * Estruture o currículo com uma progressão gradual e clara, dos fundamentos aos tópicos avançados.
+                    * Defina escopos acadêmicos precisos e claramente delimitados para cada tarefa, para que o estudante tenha pontos de conclusão claros.
+                    * Evite combinar múltiplos objetivos de aprendizagem distintos em uma única StudyTask.
+                    * Mantenha a duração individual das tarefas entre 15 e 45 minutos para evitar fadiga cognitiva e paralisia por análise.""";
             case STIMULUS_SEEKER -> """
-                    STIMULUS_SEEKER PROFILE CURRICULUM GUIDELINES:
-                    * The student experiences rapid boredom, seeks novelty, and responds strongly to frequent progress markers and practical application.
-                    * Keep tasks sharply focused on concrete concepts, alternating between foundational theory and immediate practical applications.
-                    * Avoid long consecutive blocks of purely abstract theory where practical progression is possible.
-                    * Maintain strict academic titles (e.g., 'Filtragem com filter()', never 'Quiz de filter()' or 'Jogo de Streams').
-                    * Keep individual task durations within 15 to 45 minutes with clear milestones.""";
+                    DIRETRIZES DE CURRÍCULO PARA O PERFIL STIMULUS_SEEKER:
+                    * O estudante sente tédio rapidamente, busca novidades e responde fortemente a marcadores frequentes de progresso e aplicação prática.
+                    * Mantenha as tarefas estritamente focadas em conceitos concretos, alternando entre teoria fundamental e aplicações práticas imediatas.
+                    * Evite longos blocos consecutivos de teoria puramente abstrata onde a progressão prática for possível.
+                    * Mantenha títulos acadêmicos estritos (ex: 'Filtragem com filter()', nunca 'Quiz de filter()' ou 'Jogo de Streams').
+                    * Mantenha a duração individual das tarefas entre 15 e 45 minutos com marcos claros.""";
         };
     }
 
     private String getBlocksStructureProfileGuidelines(ProcrastinationProfile profileType) {
         return switch (profileType) {
             case PERFECTIONIST -> """
-                    PERFECTIONIST STRUCTURE PREFERENCES:
-                    * Emphasize linear progression, predictability, and psychological safety.
-                    * Suggested flow: EXPLANATION -> EXAMPLE -> GUIDED_EXERCISE -> CHECKPOINT -> EXAMPLE -> QUIZ -> SUMMARY.
-                    * Ensure every concept has a step-by-step example and guided exercise before any assessment.
-                    * Use CHECKPOINT blocks to validate understanding and reduce ambiguity.""";
+                    PREFERÊNCIAS DE ESTRUTURA PARA O PERFIL PERFECTIONIST:
+                    * Enfatize a progressão linear, a previsibilidade e a segurança psicológica.
+                    * Fluxo sugerido: EXPLANATION -> EXAMPLE -> GUIDED_EXERCISE -> CHECKPOINT -> EXAMPLE -> QUIZ -> SUMMARY.
+                    * Garanta que cada conceito tenha um exemplo passo a passo e um exercício guiado antes de qualquer avaliação.
+                    * Use blocos CHECKPOINT para validar a compreensão e reduzir a ambiguidade.""";
             case STIMULUS_SEEKER -> """
-                    STIMULUS_SEEKER STRUCTURE PREFERENCES:
-                    * Emphasize brevity, novelty, frequent activity switching, and immediate feedback.
-                    * Suggested flow: EXPLANATION -> EXAMPLE -> QUIZ -> CHALLENGE -> FLASHCARD -> EXAMPLE -> SUMMARY.
-                    * Interleave short theoretical blocks with interactive micro-challenges, quizzes, and active recall flashcards.
-                    * Keep all blocks punchy (5-7 minutes each).""";
+                    PREFERÊNCIAS DE ESTRUTURA PARA O PERFIL STIMULUS_SEEKER:
+                    * Enfatize a brevidade, a novidade, a troca frequente de atividades e o feedback imediato.
+                    * Fluxo sugerido: EXPLANATION -> EXAMPLE -> QUIZ -> CHALLENGE -> FLASHCARD -> EXAMPLE -> SUMMARY.
+                    * Intercale blocos teóricos curtos com microdesafios interativos, quizzes e flashcards de recordação ativa.
+                    * Mantenha todos os blocos dinâmicos e diretos (5-7 minutos cada).""";
         };
     }
 
     private String getBlockTypeSpecificGuidelines(ContentBlockType blockType) {
         return switch (blockType) {
             case EXPLANATION -> """
-                    * Provide a crystal-clear, structured explanation of the core concept.
-                    * Use analogies, real-world connections, bullet points, and clean formatting.
-                    * Explain the 'why' and 'how' with zero unnecessary fluff.
-                    * Stay strictly on conceptual explanation. Do NOT add exercises, quizzes, or challenges at the end.""";
+                    * Forneça uma explicação extremamente clara e estruturada do conceito central.
+                    * Use analogias, conexões com o mundo real, tópicos (bullet points) e formatação limpa.
+                    * Explique o 'porquê' e o 'como' sem enrolação desnecessária.
+                    * Mantenha-se estritamente na explicação conceitual. NÃO adicione exercícios, quizzes ou desafios ao final.""";
             case EXAMPLE -> """
-                    * Provide a detailed, realistic practical example, case study, or concrete demonstration appropriate for the subject.
-                    * If the topic is software development, use clean, well-commented code. If the topic is non-technical (e.g. psychology, business, productivity, law, health), use realistic case studies, practical dialogue, behavioral scenarios, or step-by-step applications from daily life or professional practice.
-                    * Break down the example step by step with clear analysis.
-                    * Do NOT add challenges, quizzes, quick tasks, or homework sections at the end.""";
+                    * Forneça um exemplo prático detalhado e realista, estudo de caso ou demonstração concreta adequada ao assunto.
+                    * Se o tópico for desenvolvimento de software, use código limpo e bem comentado. Se o tópico não for técnico (ex: psicologia, negócios, produtividade, direito, saúde), use estudos de caso realistas, diálogos práticos, cenários comportamentais ou aplicações passo a passo do cotidiano ou da prática profissional.
+                    * Detalhe o exemplo passo a passo com uma análise clara.
+                    * NÃO adicione desafios, quizzes, tarefas rápidas ou seções de dever de casa ao final.""";
             case GUIDED_EXERCISE -> """
-                    * Present a practical problem or scenario and guide the student through resolving it.
-                    * Adapt to the subject domain (e.g., behavioral exercise, business problem, calculation, or coding task).
-                    * Format strictly using the following sections:
+                    * Apresente um problema ou cenário prático e guie o estudante na sua resolução.
+                    * Adapte ao domínio do assunto (ex: exercício comportamental, problema de negócios, cálculo ou tarefa de programação).
+                    * Formate estritamente utilizando as seguintes seções:
                       ### Enunciado
                       [Descrição do problema, cenário ou situação prática]
                       ### Dica
@@ -455,8 +455,8 @@ public class PromptBuilder {
                       ### Resolução
                       [Passo a passo completo e resolução explicada detalhadamente]""";
             case QUIZ -> """
-                    * Provide 2 to 3 concise multiple choice questions directly related to the task topic.
-                    * Format each question strictly as:
+                    * Forneça de 2 a 3 questões concisas de múltipla escolha diretamente relacionadas ao tópico da tarefa.
+                    * Formate cada questão estritamente como:
                       ### Questão 1
                       [Enunciado da pergunta]
                       - (A) [Opção A]
@@ -466,15 +466,15 @@ public class PromptBuilder {
                       **Resposta Correta:** A
                       **Explicação:** [Explicação concisa do porquê está correta e as outras erradas]""";
             case FLASHCARD -> """
-                    * Provide 2 to 4 active recall flashcards on key concepts.
-                    * Format each card strictly as:
+                    * Forneça de 2 a 4 flashcards de recordação ativa sobre os conceitos-chave.
+                    * Formate cada cartão estritamente como:
                       ### Card 1
                       **Frente:** [Pergunta, termo ou conceito chave para recordar]
                       **Verso:** [Resposta direta, definição essencial ou aplicação chave]""";
             case CHALLENGE -> """
-                    * Present a concise micro-challenge or practical problem to solve.
-                    * Adapt to the subject (e.g. behavioral change challenge, scenario analysis, case problem, or technical challenge).
-                    * Format strictly using the following sections:
+                    * Apresente um microdesafio conciso ou problema prático para resolver.
+                    * Adapte ao assunto (ex: desafio de mudança comportamental, análise de cenário, problema de caso ou desafio técnico).
+                    * Formate estritamente utilizando as seguintes seções:
                       ### Desafio
                       [Descrição do desafio e requisitos]
                       ### Dica
@@ -482,29 +482,29 @@ public class PromptBuilder {
                       ### Resolução
                       [Solução completa comentada e explicação]""";
             case CHECKPOINT -> """
-                    * A self-assessment checkpoint with 3 to 4 verification criteria for the student.
-                    * Format as:
+                    * Um checkpoint de autoavaliação com 3 a 4 critérios de verificação para o estudante.
+                    * Formate como:
                       ### Verificação de Compreensão
                       - [ ] [Critério 1 que o aluno deve ter compreendido ou conseguido aplicar]
                       - [ ] [Critério 2 que o aluno deve ter compreendido ou conseguido aplicar]
                       - [ ] [Critério 3 que o aluno deve ter compreendido ou conseguido aplicar]
                       **Mensagem:** [Mensagem encorajadora sobre o progresso no tema]""";
             case SUMMARY -> """
-                    * 3 to 5 bullet points summarizing the most vital takeaways and practical insights.
-                    * A 'Dica de Ouro' (Golden Rule / Pro Tip) for real-world application of the topic.""";
+                    * De 3 a 5 tópicos (bullet points) resumindo as conclusões mais importantes e insights práticos.
+                    * Uma 'Dica de Ouro' para aplicação do tópico no mundo real.""";
         };
     }
 
     private String getBlockContentProfilePedagogy(ProcrastinationProfile profileType) {
         return switch (profileType) {
             case PERFECTIONIST -> """
-                    * Maintain high clarity and predictability.
-                    * Normalize mistakes and demystify edge cases.
-                    * Use step-by-step guidance and structured, achievable milestones.""";
+                    * Mantenha alta clareza e previsibilidade.
+                    * Normalize erros e desmistifique casos extremos.
+                    * Use orientação passo a passo e marcos estruturados e alcançáveis.""";
             case STIMULUS_SEEKER -> """
-                    * Keep text dynamic, concise, and focused on active engagement.
-                    * Use concrete examples before abstract theory.
-                    * Deliver immediate feedback and actionable takeaways.""";
+                    * Mantenha o texto dinâmico, conciso e focado no engajamento ativo.
+                    * Use exemplos concretos antes da teoria abstrata.
+                    * Entregue feedback imediato e conclusões práticas aplicáveis.""";
         };
     }
 }
