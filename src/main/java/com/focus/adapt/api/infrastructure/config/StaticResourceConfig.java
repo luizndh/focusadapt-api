@@ -21,19 +21,27 @@ public class StaticResourceConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String location = badgeIconsPath;
-        if (!location.startsWith("file:") && !location.startsWith("classpath:")) {
-            Path path = Paths.get(location).toAbsolutePath().normalize();
-            String uriString = path.toUri().toString();
-            location = uriString.endsWith("/") ? uriString : uriString + "/";
-        } else if (!location.endsWith("/")) {
-            location += "/";
-        }
+        String location = normalizeLocation(badgeIconsPath);
 
         log.info("Registering static resource handler: /badge-icons/** -> {}", location);
 
+        String devRelative = normalizeLocation("../badge-icons/");
+        String devCurrent = normalizeLocation("badge-icons/");
+
         registry.addResourceHandler("/badge-icons/**")
-                .addResourceLocations(location)
+                .addResourceLocations(location, devRelative, devCurrent)
                 .setCacheControl(CacheControl.maxAge(Duration.ofDays(7)).cachePublic());
+    }
+
+    private String normalizeLocation(String rawLocation) {
+        if (rawLocation == null || rawLocation.isBlank()) {
+            return "file:badge-icons/";
+        }
+        if (rawLocation.startsWith("file:") || rawLocation.startsWith("classpath:")) {
+            return rawLocation.endsWith("/") ? rawLocation : rawLocation + "/";
+        }
+        Path path = Paths.get(rawLocation).toAbsolutePath().normalize();
+        String uriString = path.toUri().toString();
+        return uriString.endsWith("/") ? uriString : uriString + "/";
     }
 }
