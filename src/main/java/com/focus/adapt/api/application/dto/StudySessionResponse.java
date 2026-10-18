@@ -34,6 +34,10 @@ public class StudySessionResponse {
     private UUID studyPlanId;
     private List<UUID> studyTaskIds;
     private int sessionXp;
+    private int baseSessionXp;
+    private int multiplierBonusXp;
+    @Builder.Default
+    private double appliedMultiplier = 1.0;
     private int badgeBonusXp;
     private int totalXp;
     private int xpEarned;

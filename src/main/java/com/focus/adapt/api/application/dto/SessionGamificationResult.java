@@ -9,9 +9,21 @@ public record SessionGamificationResult(
         int sessionXp,
         int badgeBonusXp,
         int totalXp,
-        List<Badge> unlockedBadges
+        List<Badge> unlockedBadges,
+        int baseSessionXp,
+        int multiplierBonusXp,
+        double appliedMultiplier
 ) {
+    public SessionGamificationResult(
+            int sessionXp,
+            int badgeBonusXp,
+            int totalXp,
+            List<Badge> unlockedBadges
+    ) {
+        this(sessionXp, badgeBonusXp, totalXp, unlockedBadges, sessionXp, 0, 1.0);
+    }
+
     public static SessionGamificationResult empty() {
-        return new SessionGamificationResult(0, 0, 0, Collections.emptyList());
+        return new SessionGamificationResult(0, 0, 0, Collections.emptyList(), 0, 0, 1.0);
     }
 }

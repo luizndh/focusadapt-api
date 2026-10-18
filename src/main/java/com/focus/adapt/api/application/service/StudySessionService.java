@@ -3,7 +3,10 @@ package com.focus.adapt.api.application.service;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -44,6 +47,17 @@ public class StudySessionService {
 
     @Transactional
     public StudySessionResponse createStudySession(StudySessionRequest request, User user) {
+        if (request.getStatus() == StudySessionStatus.COMPLETED && request.getStartTime() != null) {
+            Optional<StudySession> existingCompleted = studySessionRepository
+                    .findFirstByUserAndStartTimeAndStatus(user, request.getStartTime(), StudySessionStatus.COMPLETED);
+            if (existingCompleted.isPresent() && existingCompleted.get().getXpAwarded() > 0) {
+                StudySession existing = existingCompleted.get();
+                StudySessionResponse idempotentResponse = studySessionMapper.toResponse(existing);
+                applyGamificationToResponse(idempotentResponse, SessionGamificationResult.empty());
+                return idempotentResponse;
+            }
+        }
+
         StudySession session = studySessionMapper.toEntity(request);
         session.setUser(user);
 
@@ -86,13 +100,7 @@ public class StudySessionService {
         }
 
         StudySessionResponse response = studySessionMapper.toResponse(saved);
-        response.setSessionXp(gamificationResult.sessionXp());
-        response.setBadgeBonusXp(gamificationResult.badgeBonusXp());
-        response.setTotalXp(gamificationResult.totalXp());
-        response.setXpEarned(gamificationResult.totalXp());
-        if (gamificationResult.unlockedBadges() != null && !gamificationResult.unlockedBadges().isEmpty()) {
-            response.setUnlockedBadges(gamificationResult.unlockedBadges().stream().map(badgeMapper::toResponse).toList());
-        }
+        applyGamificationToResponse(response, gamificationResult);
         return response;
     }
 
@@ -177,14 +185,21 @@ public class StudySessionService {
         }
 
         StudySessionResponse response = studySessionMapper.toResponse(updated);
+        applyGamificationToResponse(response, gamificationResult);
+        return response;
+    }
+
+    private void applyGamificationToResponse(StudySessionResponse response, SessionGamificationResult gamificationResult) {
         response.setSessionXp(gamificationResult.sessionXp());
+        response.setBaseSessionXp(gamificationResult.baseSessionXp());
+        response.setMultiplierBonusXp(gamificationResult.multiplierBonusXp());
+        response.setAppliedMultiplier(gamificationResult.appliedMultiplier());
         response.setBadgeBonusXp(gamificationResult.badgeBonusXp());
         response.setTotalXp(gamificationResult.totalXp());
         response.setXpEarned(gamificationResult.totalXp());
         if (gamificationResult.unlockedBadges() != null && !gamificationResult.unlockedBadges().isEmpty()) {
             response.setUnlockedBadges(gamificationResult.unlockedBadges().stream().map(badgeMapper::toResponse).toList());
         }
-        return response;
     }
 
     @Transactional
@@ -204,10 +219,11 @@ public class StudySessionService {
             throw new BusinessException("At least one study task is required");
         }
 
+        Set<UUID> uniqueTaskIds = new LinkedHashSet<>(taskIds);
         List<StudyTask> tasks = new ArrayList<>();
         StudyPlan commonPlan = null;
 
-        for (UUID taskId : taskIds) {
+        for (UUID taskId : uniqueTaskIds) {
             StudyTask task = studyTaskRepository.findById(taskId)
                     .orElseThrow(() -> new ResourceNotFoundException("Study task not found: " + taskId));
 

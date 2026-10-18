@@ -27,6 +27,7 @@ import com.focus.adapt.api.domain.entity.StudyTask;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.domain.entity.UserAchievement;
 import com.focus.adapt.api.domain.entity.enums.BadgeCategory;
+import com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile;
 import com.focus.adapt.api.domain.entity.enums.StudyMode;
 import com.focus.adapt.api.domain.entity.enums.StudyPlanStatus;
 import com.focus.adapt.api.domain.entity.enums.StudySessionStatus;
@@ -354,4 +355,213 @@ class GamificationServiceTest {
         assertEquals(90, result.totalXp());
         assertEquals(90, user.getPoints());
     }
+
+    @Test
+    void shouldCalculateNextTaskMultiplierProgressionForStimulusSeeker() {
+        assertEquals(1.50, gamificationService.calculateNextTaskMultiplier(1, ProcrastinationProfile.STIMULUS_SEEKER), 0.001);
+        assertEquals(1.75, gamificationService.calculateNextTaskMultiplier(2, ProcrastinationProfile.STIMULUS_SEEKER), 0.001);
+        assertEquals(2.00, gamificationService.calculateNextTaskMultiplier(3, ProcrastinationProfile.STIMULUS_SEEKER), 0.001);
+        assertEquals(2.25, gamificationService.calculateNextTaskMultiplier(4, ProcrastinationProfile.STIMULUS_SEEKER), 0.001);
+        assertEquals(2.50, gamificationService.calculateNextTaskMultiplier(5, ProcrastinationProfile.STIMULUS_SEEKER), 0.001);
+        assertEquals(2.75, gamificationService.calculateNextTaskMultiplier(6, ProcrastinationProfile.STIMULUS_SEEKER), 0.001);
+    }
+
+    @Test
+    void shouldCalculateExpectedTaskXpWithRoundingForFractionalMultipliers() {
+        // 1st task (index 0): 1.0x -> 50 XP
+        assertEquals(50, gamificationService.calculateTaskXp(0, ProcrastinationProfile.STIMULUS_SEEKER));
+        // 2nd task (index 1): 1.50x -> 75 XP
+        assertEquals(75, gamificationService.calculateTaskXp(1, ProcrastinationProfile.STIMULUS_SEEKER));
+        // 3rd task (index 2): 1.75x -> Math.round(50 * 1.75) = Math.round(87.5) = 88 XP
+        assertEquals(88, gamificationService.calculateTaskXp(2, ProcrastinationProfile.STIMULUS_SEEKER));
+        // 4th task (index 3): 2.00x -> 100 XP
+        assertEquals(100, gamificationService.calculateTaskXp(3, ProcrastinationProfile.STIMULUS_SEEKER));
+        // 5th task (index 4): 2.25x -> Math.round(50 * 2.25) = Math.round(112.5) = 113 XP
+        assertEquals(113, gamificationService.calculateTaskXp(4, ProcrastinationProfile.STIMULUS_SEEKER));
+        // 6th task (index 5): 2.50x -> 125 XP
+        assertEquals(125, gamificationService.calculateTaskXp(5, ProcrastinationProfile.STIMULUS_SEEKER));
+        // 7th task (index 6): 2.75x -> Math.round(50 * 2.75) = Math.round(137.5) = 138 XP
+        assertEquals(138, gamificationService.calculateTaskXp(6, ProcrastinationProfile.STIMULUS_SEEKER));
+    }
+
+    @Test
+    void shouldAwardOnlyBaseXpWhenStimulusSeekerEndsSessionAfterFirstTask() {
+        user.setProcrastinationProfile(ProcrastinationProfile.STIMULUS_SEEKER);
+        StudyTask task1 = createTask("Task 1");
+
+        StudySession session = StudySession.builder()
+                .title("1 Task Session")
+                .studyMode(StudyMode.FREE)
+                .studyTasks(List.of(task1))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+
+        mockEmptyGamificationDependencies();
+
+        SessionGamificationResult result = gamificationService.processSessionCompletion(session, user);
+
+        assertEquals(50, result.sessionXp());
+        assertEquals(50, result.baseSessionXp());
+        assertEquals(0, result.multiplierBonusXp());
+        assertEquals(1.0, result.appliedMultiplier(), 0.001);
+        assertEquals(50, result.totalXp());
+        assertEquals(50, user.getPoints());
+    }
+
+    @Test
+    void shouldApplyProgressiveMultiplierForStimulusSeekerAcross2And3And4Tasks() {
+        user.setProcrastinationProfile(ProcrastinationProfile.STIMULUS_SEEKER);
+        StudyTask task1 = createTask("Task 1");
+        StudyTask task2 = createTask("Task 2");
+        StudyTask task3 = createTask("Task 3");
+        StudyTask task4 = createTask("Task 4");
+
+        mockEmptyGamificationDependencies();
+
+        // 2 tasks: 50 + 75 (1.5x) = 125 XP (base 100 + bonus 25)
+        StudySession session2 = StudySession.builder()
+                .title("2 Tasks Session")
+                .studyMode(StudyMode.FREE)
+                .studyTasks(List.of(task1, task2))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        SessionGamificationResult result2 = gamificationService.processSessionCompletion(session2, user);
+        assertEquals(125, result2.sessionXp());
+        assertEquals(100, result2.baseSessionXp());
+        assertEquals(25, result2.multiplierBonusXp());
+        assertEquals(1.50, result2.appliedMultiplier(), 0.001);
+        assertEquals(125, user.getPoints());
+
+        // 3 tasks: 50 + 75 (1.5x) + 88 (1.75x) = 213 XP (base 150 + bonus 63)
+        user.setPoints(0);
+        StudySession session3 = StudySession.builder()
+                .title("3 Tasks Session")
+                .studyMode(StudyMode.FREE)
+                .studyTasks(List.of(task1, task2, task3))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        SessionGamificationResult result3 = gamificationService.processSessionCompletion(session3, user);
+        assertEquals(213, result3.sessionXp());
+        assertEquals(150, result3.baseSessionXp());
+        assertEquals(63, result3.multiplierBonusXp());
+        assertEquals(1.75, result3.appliedMultiplier(), 0.001);
+        assertEquals(213, user.getPoints());
+
+        // 4 tasks: 50 + 75 (1.5x) + 88 (1.75x) + 100 (2.0x) = 313 XP (base 200 + bonus 113)
+        user.setPoints(0);
+        StudySession session4 = StudySession.builder()
+                .title("4 Tasks Session")
+                .studyMode(StudyMode.FREE)
+                .studyTasks(List.of(task1, task2, task3, task4))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        SessionGamificationResult result4 = gamificationService.processSessionCompletion(session4, user);
+        assertEquals(313, result4.sessionXp());
+        assertEquals(200, result4.baseSessionXp());
+        assertEquals(113, result4.multiplierBonusXp());
+        assertEquals(2.00, result4.appliedMultiplier(), 0.001);
+        assertEquals(313, user.getPoints());
+    }
+
+    @Test
+    void shouldResetMultiplierInNewStudySessionForStimulusSeeker() {
+        user.setProcrastinationProfile(ProcrastinationProfile.STIMULUS_SEEKER);
+        StudyTask task1 = createTask("Task 1");
+        StudyTask task2 = createTask("Task 2");
+        StudyTask task3 = createTask("Task 3");
+        StudyTask task4 = createTask("Task 4");
+
+        mockEmptyGamificationDependencies();
+
+        // First session: 3 tasks -> 213 XP (reaches 1.75x on 3rd task, would offer 2.0x for 4th)
+        StudySession firstSession = StudySession.builder()
+                .title("First Session")
+                .studyMode(StudyMode.FREE)
+                .studyTasks(List.of(task1, task2, task3))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        gamificationService.processSessionCompletion(firstSession, user);
+        assertEquals(213, user.getPoints());
+
+        // Second session: starts fresh! 1 task in new session -> 50 XP (1.0x), next offered is 1.5x
+        StudySession secondSession = StudySession.builder()
+                .title("Second Session")
+                .studyMode(StudyMode.FREE)
+                .studyTasks(List.of(task4))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        SessionGamificationResult secondResult = gamificationService.processSessionCompletion(secondSession, user);
+
+        assertEquals(50, secondResult.sessionXp());
+        assertEquals(0, secondResult.multiplierBonusXp());
+        assertEquals(1.0, secondResult.appliedMultiplier(), 0.001);
+        assertEquals(1.50, gamificationService.calculateNextTaskMultiplier(1, user.getProcrastinationProfile()), 0.001);
+        assertEquals(263, user.getPoints());
+    }
+
+    @Test
+    void shouldNeverApplyMultiplierForPerfectionistUserEvenWithMultipleTasks() {
+        user.setProcrastinationProfile(ProcrastinationProfile.PERFECTIONIST);
+        StudyTask task1 = createTask("Task 1");
+        StudyTask task2 = createTask("Task 2");
+        StudyTask task3 = createTask("Task 3");
+
+        mockEmptyGamificationDependencies();
+
+        StudySession session = StudySession.builder()
+                .title("Perfectionist 3 Tasks Session")
+                .studyMode(StudyMode.CONTINUOUS)
+                .studyTasks(List.of(task1, task2, task3))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+
+        SessionGamificationResult result = gamificationService.processSessionCompletion(session, user);
+
+        // 3 * 50 = 150 XP (no multiplier)
+        assertEquals(150, result.sessionXp());
+        assertEquals(150, result.baseSessionXp());
+        assertEquals(0, result.multiplierBonusXp());
+        assertEquals(1.0, result.appliedMultiplier(), 0.001);
+        assertEquals(1.0, gamificationService.calculateNextTaskMultiplier(3, ProcrastinationProfile.PERFECTIONIST), 0.001);
+        assertEquals(150, user.getPoints());
+    }
+
+    @Test
+    void shouldDeduplicateRepeatedTasksInSameSessionToPreventDuplicateMultiplierAndXp() {
+        user.setProcrastinationProfile(ProcrastinationProfile.STIMULUS_SEEKER);
+        StudyTask task1 = createTask("Task 1");
+        StudyTask task2 = createTask("Task 2");
+
+        mockEmptyGamificationDependencies();
+
+        // Même task1 repetida 3 vezes + task2: deve contar apenas 2 tasks distintas (50 + 75 = 125 XP)
+        StudySession session = StudySession.builder()
+                .title("Session with duplicate task references")
+                .studyMode(StudyMode.FREE)
+                .studyTasks(List.of(task1, task1, task2, task1))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+
+        SessionGamificationResult result = gamificationService.processSessionCompletion(session, user);
+
+        assertEquals(125, result.sessionXp());
+        assertEquals(100, result.baseSessionXp());
+        assertEquals(25, result.multiplierBonusXp());
+        assertEquals(1.50, result.appliedMultiplier(), 0.001);
+        assertEquals(125, user.getPoints());
+    }
+
+    private StudyTask createTask(String title) {
+        StudyTask task = StudyTask.builder().title(title).build();
+        task.setId(UUID.randomUUID());
+        return task;
+    }
+
+    private void mockEmptyGamificationDependencies() {
+        when(userMissionRepository.findByUserAndStatus(user, UserMissionStatus.IN_PROGRESS))
+                .thenReturn(Collections.emptyList());
+        when(userAchievementRepository.findByUser(user)).thenReturn(Collections.emptyList());
+        when(badgeRepository.findAll()).thenReturn(Collections.emptyList());
+    }
 }
+

@@ -249,4 +249,103 @@ class StudySessionServiceTest {
 
         assertThrows(BusinessException.class, () -> studySessionService.createStudySession(request, user));
     }
+
+    @Test
+    void shouldBeIdempotentWhenCreatingAlreadyCompletedSessionWithSameStartTime() {
+        UUID userId = UUID.randomUUID();
+        User user = User.builder().points(213).build();
+        user.setId(userId);
+
+        LocalDateTime startTime = LocalDateTime.now().minusMinutes(30);
+        StudySession existingSession = StudySession.builder()
+                .title("Completed Session")
+                .status(StudySessionStatus.COMPLETED)
+                .studyMode(StudyMode.FREE)
+                .user(user)
+                .startTime(startTime)
+                .xpAwarded(213)
+                .build();
+
+        StudySessionRequest retryRequest = StudySessionRequest.builder()
+                .title("Completed Session")
+                .studyMode(StudyMode.FREE)
+                .status(StudySessionStatus.COMPLETED)
+                .startTime(startTime)
+                .endTime(LocalDateTime.now())
+                .build();
+
+        when(studySessionRepository.findFirstByUserAndStartTimeAndStatus(
+                user, startTime, StudySessionStatus.COMPLETED))
+                .thenReturn(Optional.of(existingSession));
+        when(studySessionMapper.toResponse(existingSession)).thenReturn(new StudySessionResponse());
+
+        StudySessionResponse response = studySessionService.createStudySession(retryRequest, user);
+
+        assertNotNull(response);
+        assertEquals(0, response.getSessionXp());
+        assertEquals(0, response.getMultiplierBonusXp());
+        assertEquals(0, response.getTotalXp());
+        verify(gamificationService, never()).processSessionCompletion(any(StudySession.class), any(User.class));
+        verify(studySessionRepository, never()).save(any(StudySession.class));
+    }
+
+    @Test
+    void shouldDeduplicateTaskIdsAndMapMultiplierFieldsInSessionResponse() {
+        UUID userId = UUID.randomUUID();
+        User user = User.builder().points(0).build();
+        user.setId(userId);
+
+        StudyPlan plan = StudyPlan.builder().user(user).status(StudyPlanStatus.ACTIVE).build();
+        plan.setId(UUID.randomUUID());
+
+        UUID task1Id = UUID.randomUUID();
+        StudyTask task1 = StudyTask.builder().studyPlan(plan).build();
+        task1.setId(task1Id);
+
+        UUID task2Id = UUID.randomUUID();
+        StudyTask task2 = StudyTask.builder().studyPlan(plan).build();
+        task2.setId(task2Id);
+
+        StudySessionRequest request = StudySessionRequest.builder()
+                .title("Multi-task Session")
+                .studyMode(StudyMode.FREE)
+                .status(StudySessionStatus.COMPLETED)
+                .startTime(LocalDateTime.now().minusMinutes(40))
+                .endTime(LocalDateTime.now())
+                .studyTaskIds(List.of(task1Id, task1Id, task2Id, task1Id))
+                .build();
+
+        StudySession entity = StudySession.builder()
+                .title("Multi-task Session")
+                .status(StudySessionStatus.COMPLETED)
+                .studyMode(StudyMode.FREE)
+                .user(user)
+                .xpAwarded(0)
+                .build();
+
+        when(studySessionRepository.findFirstByUserAndStartTimeAndStatus(
+                any(User.class), any(LocalDateTime.class), any(StudySessionStatus.class)))
+                .thenReturn(Optional.empty());
+        when(studySessionMapper.toEntity(request)).thenReturn(entity);
+        when(studyTaskRepository.findById(task1Id)).thenReturn(Optional.of(task1));
+        when(studyTaskRepository.findById(task2Id)).thenReturn(Optional.of(task2));
+        when(studySessionRepository.save(any(StudySession.class))).thenReturn(entity);
+        when(gamificationService.processSessionCompletion(any(StudySession.class), any(User.class)))
+                .thenReturn(new com.focus.adapt.api.application.dto.SessionGamificationResult(
+                        125, 0, 125, List.of(), 100, 25, 1.50
+                ));
+        when(studySessionMapper.toResponse(any(StudySession.class))).thenReturn(new StudySessionResponse());
+
+        StudySessionResponse response = studySessionService.createStudySession(request, user);
+
+        assertEquals(2, entity.getStudyTasks().size());
+        verify(studyTaskRepository, times(1)).findById(task1Id);
+        verify(studyTaskRepository, times(1)).findById(task2Id);
+        assertEquals(125, response.getSessionXp());
+        assertEquals(100, response.getBaseSessionXp());
+        assertEquals(25, response.getMultiplierBonusXp());
+        assertEquals(1.50, response.getAppliedMultiplier(), 0.001);
+        assertEquals(125, response.getTotalXp());
+    }
 }
+
