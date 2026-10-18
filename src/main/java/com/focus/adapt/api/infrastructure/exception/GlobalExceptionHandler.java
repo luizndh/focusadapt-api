@@ -47,6 +47,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(
+            org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        Throwable rootCause = ex.getMostSpecificCause();
+        String message = (rootCause instanceof BusinessException)
+                ? rootCause.getMessage()
+                : "Corpo da requisição inválido ou malformado.";
+        log.warn("Invalid request body: {}", message);
+        ApiResponse<Void> response = ApiResponse.error(message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<ApiResponse<Void>> handleOptimisticLockingFailureException(org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
         log.warn("Concurrency conflict / Optimistic locking failure: {}", ex.getMessage());

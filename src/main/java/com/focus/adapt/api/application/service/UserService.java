@@ -90,25 +90,27 @@ public class UserService {
     }
 
     /**
-     * Recebe as respostas do questionário ou o perfil diretamente, calcula se necessário
-     * e atualiza o usuário.
+     * Valida as 20 respostas do questionário, calcula o perfil de procrastinação no backend
+     * e persiste o resultado no usuário autenticado.
      */
     @Transactional
     public UserResponse submitQuestionnaire(User user, QuestionnaireSubmitRequest request) {
-        ProcrastinationProfile profile;
-
-        if (request != null && request.getProfile() != null) {
-            profile = request.getProfile();
-        } else if (request != null && request.getAnswers() != null && !request.getAnswers().isEmpty()) {
-            profile = profileCalculator.calculate(request.getAnswers());
-        } else {
-            profile = ProcrastinationProfile.PERFECTIONIST;
+        if (user == null || user.getId() == null) {
+            throw new BusinessException("Usuário autenticado inválido.");
+        }
+        if (request == null || request.getAnswers() == null || request.getAnswers().isEmpty()) {
+            throw new BusinessException("As respostas do questionário são obrigatórias.");
         }
 
-        user.setQuestionnaireCompleted(true);
-        user.setProcrastinationProfile(profile);
+        User persistentUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + user.getId()));
 
-        User savedUser = userRepository.save(user);
+        ProcrastinationProfile profile = profileCalculator.calculate(request.getAnswers());
+
+        persistentUser.setQuestionnaireCompleted(true);
+        persistentUser.setProcrastinationProfile(profile);
+
+        User savedUser = userRepository.save(persistentUser);
         return userMapper.toResponse(savedUser);
     }
 
