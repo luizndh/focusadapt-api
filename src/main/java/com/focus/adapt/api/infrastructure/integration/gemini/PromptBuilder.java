@@ -70,19 +70,33 @@ public class PromptBuilder {
                 ==================================================
 
                 O campo "category" deve ser escolhido a partir da seguinte lista controlada:
-                * Programação
-                * Desenvolvimento Backend
-                * Desenvolvimento Frontend
-                * Desenvolvimento Mobile
-                * Banco de Dados
-                * DevOps
-                * Computação em Nuvem
-                * Ciência de Dados
-                * Inteligência Artificial
                 * Matemática
                 * Física
+                * Química
+                * Biologia
+                * História
+                * Geografia
+                * Sociologia
+                * Filosofia
+                * Língua Portuguesa e Literatura
+                * Redação
                 * Idiomas
-                * Negócios
+                * Tecnologia da Informação
+                * Programação e Desenvolvimento de Software
+                * Ciência de Dados e Inteligência Artificial
+                * Engenharia e Arquitetura
+                * Medicina e Ciências da Saúde
+                * Psicologia e Comportamento
+                * Direito e Legislação
+                * Economia, Finanças e Contabilidade
+                * Administração, Negócios e Empreendedorismo
+                * Marketing e Comunicação
+                * Artes, Música e Design
+                * Educação e Pedagogia
+                * Astronomia e Geociências
+                * Meio Ambiente e Ecologia
+                * Produtividade e Desenvolvimento Pessoal
+                * Concursos e Vestibulares
                 * Outros
 
                 ==================================================
@@ -195,19 +209,33 @@ public class PromptBuilder {
                 ==================================================
 
                 O campo "category" deve ser escolhido a partir da seguinte lista controlada:
-                * Programação
-                * Desenvolvimento Backend
-                * Desenvolvimento Frontend
-                * Desenvolvimento Mobile
-                * Banco de Dados
-                * DevOps
-                * Computação em Nuvem
-                * Ciência de Dados
-                * Inteligência Artificial
                 * Matemática
                 * Física
+                * Química
+                * Biologia
+                * História
+                * Geografia
+                * Sociologia
+                * Filosofia
+                * Língua Portuguesa e Literatura
+                * Redação
                 * Idiomas
-                * Negócios
+                * Tecnologia da Informação
+                * Programação e Desenvolvimento de Software
+                * Ciência de Dados e Inteligência Artificial
+                * Engenharia e Arquitetura
+                * Medicina e Ciências da Saúde
+                * Psicologia e Comportamento
+                * Direito e Legislação
+                * Economia, Finanças e Contabilidade
+                * Administração, Negócios e Empreendedorismo
+                * Marketing e Comunicação
+                * Artes, Música e Design
+                * Educação e Pedagogia
+                * Astronomia e Geociências
+                * Meio Ambiente e Ecologia
+                * Produtividade e Desenvolvimento Pessoal
+                * Concursos e Vestibulares
                 * Outros
 
                 ==================================================

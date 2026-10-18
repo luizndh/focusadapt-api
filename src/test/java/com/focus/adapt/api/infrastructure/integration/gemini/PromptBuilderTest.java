@@ -27,6 +27,13 @@ class PromptBuilderTest {
         assertTrue(prompt.contains("scheduledDate"), "Prompt schema should include scheduledDate");
         assertTrue(prompt.contains("15 a 45 minutos"), "Prompt should enforce duration guidelines");
         assertTrue(prompt.contains("progressão gradual"), "Prompt should include perfectionist curriculum guidelines");
+        assertTrue(prompt.contains("História"), "Prompt should include História category");
+        assertTrue(prompt.contains("Geografia"), "Prompt should include Geografia category");
+        assertTrue(prompt.contains("Biologia"), "Prompt should include Biologia category");
+        assertTrue(prompt.contains("Sociologia"), "Prompt should include Sociologia category");
+        assertTrue(prompt.contains("Filosofia"), "Prompt should include Filosofia category");
+        assertTrue(prompt.contains("Química"), "Prompt should include Química category");
+        assertTrue(prompt.contains("Tecnologia da Informação"), "Prompt should include Tecnologia da Informação category");
     }
 
     @Test

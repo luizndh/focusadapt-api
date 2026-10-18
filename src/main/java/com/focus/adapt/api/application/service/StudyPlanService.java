@@ -170,7 +170,7 @@ public class StudyPlanService {
         StudyPlan plan = StudyPlan.builder()
                 .title(aiResponse.getTitle() != null && !aiResponse.getTitle().isBlank() ? aiResponse.getTitle() : fallbackTopic)
                 .description(aiResponse.getDescription() != null ? aiResponse.getDescription() : fallbackDesc)
-                .category(aiResponse.getCategory() != null ? aiResponse.getCategory() : "Other")
+                .category(aiResponse.getCategory() != null ? aiResponse.getCategory() : "Outros")
                 .startDate(planStartDate)
                 .endDate(planEndDate)
                 .totalEstimatedDurationMinutes(totalMinutes)
