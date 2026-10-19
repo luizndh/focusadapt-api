@@ -20,6 +20,12 @@ public interface StudyPlanMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "studySessions", ignore = true)
     @Mapping(target = "studyTasks", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "totalEstimatedDurationMinutes", ignore = true)
+    @Mapping(target = "availableHoursPerDay", ignore = true)
+    @Mapping(target = "availableDays", ignore = true)
     StudyPlan toEntity(StudyPlanRequest request);
 
     @Mapping(target = "tasks", source = "studyTasks", qualifiedByName = "metadataOnly")
