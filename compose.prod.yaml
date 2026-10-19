@@ -45,13 +45,6 @@ services:
     restart: unless-stopped
     networks:
       - focusadapt-network
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: focusadapt-cloudflared
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    restart: unless-stopped
-    networks:
-    - focusadapt-network
 
 volumes:
   pgdata_prod:
