@@ -21,6 +21,7 @@ public class DashboardResponse {
     private List<UserMissionResponse> activeMissions;
     private List<BadgeResponse> unlockedBadges;
     private StudyStats studyStats;
+    private List<LeaderboardEntryResponse> leaderboard;
 
     @Getter
     @Setter

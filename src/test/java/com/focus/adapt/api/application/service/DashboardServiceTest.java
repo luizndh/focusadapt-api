@@ -99,4 +99,67 @@ class DashboardServiceTest {
         assertNotNull(response);
         assertEquals(0, response.getStreak());
     }
+
+    @Test
+    void shouldReturnLeaderboardForStimulusSeeker() {
+        testUser.setProcrastinationProfile(com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile.STIMULUS_SEEKER);
+        testUser.setId(java.util.UUID.randomUUID());
+
+        User otherUser = User.builder()
+                .name("Top Player")
+                .points(800)
+                .procrastinationProfile(com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile.STIMULUS_SEEKER)
+                .build();
+        otherUser.setId(java.util.UUID.randomUUID());
+
+        when(userRepository.findTopByProcrastinationProfileOrderByPointsDesc(
+                eq(com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile.STIMULUS_SEEKER),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(java.util.List.of(otherUser, testUser));
+
+        when(userMissionRepository.findByUserAndStatus(any(User.class), eq(UserMissionStatus.IN_PROGRESS)))
+                .thenReturn(Collections.emptyList());
+        when(userAchievementRepository.findByUser(any(User.class), any(Pageable.class)))
+                .thenReturn(Page.empty());
+        when(studySessionRepository.findByUserAndStatus(any(User.class), eq(StudySessionStatus.COMPLETED), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        DashboardResponse response = dashboardService.getDashboard(testUser);
+
+        assertNotNull(response);
+        assertNotNull(response.getLeaderboard());
+        assertEquals(2, response.getLeaderboard().size());
+
+        var first = response.getLeaderboard().get(0);
+        assertEquals("Top Player", first.getUserName());
+        assertEquals(1, first.getRank());
+        assertEquals(800, first.getXpPoints());
+        assertEquals(5, first.getLevel()); // 4 + (800-500)/300 = 5
+        org.junit.jupiter.api.Assertions.assertFalse(first.isCurrentUser());
+
+        var second = response.getLeaderboard().get(1);
+        assertEquals("Test User", second.getUserName());
+        assertEquals(2, second.getRank());
+        assertEquals(100, second.getXpPoints());
+        assertEquals(2, second.getLevel()); // points < 250 -> 2
+        org.junit.jupiter.api.Assertions.assertTrue(second.isCurrentUser());
+    }
+
+    @Test
+    void shouldReturnEmptyLeaderboardForPerfectionist() {
+        testUser.setProcrastinationProfile(com.focus.adapt.api.domain.entity.enums.ProcrastinationProfile.PERFECTIONIST);
+
+        when(userMissionRepository.findByUserAndStatus(any(User.class), eq(UserMissionStatus.IN_PROGRESS)))
+                .thenReturn(Collections.emptyList());
+        when(userAchievementRepository.findByUser(any(User.class), any(Pageable.class)))
+                .thenReturn(Page.empty());
+        when(studySessionRepository.findByUserAndStatus(any(User.class), eq(StudySessionStatus.COMPLETED), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        DashboardResponse response = dashboardService.getDashboard(testUser);
+
+        assertNotNull(response);
+        assertNotNull(response.getLeaderboard());
+        org.junit.jupiter.api.Assertions.assertTrue(response.getLeaderboard().isEmpty());
+    }
 }

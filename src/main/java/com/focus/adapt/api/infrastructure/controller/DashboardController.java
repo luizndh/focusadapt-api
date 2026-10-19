@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.focus.adapt.api.application.dto.DashboardResponse;
+import com.focus.adapt.api.application.dto.LeaderboardEntryResponse;
 import com.focus.adapt.api.application.service.DashboardService;
 import com.focus.adapt.api.domain.entity.User;
 import com.focus.adapt.api.infrastructure.exception.ApiResponse;
@@ -29,6 +30,13 @@ public class DashboardController {
     @Operation(summary = "Get current user dashboard and gamification summary statistics")
     public ResponseEntity<ApiResponse<DashboardResponse>> getDashboard(@CurrentUser User user) {
         DashboardResponse response = dashboardService.getDashboard(user);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/leaderboard")
+    @Operation(summary = "Get stimulus seeker leaderboard (Top 5)")
+    public ResponseEntity<ApiResponse<java.util.List<LeaderboardEntryResponse>>> getLeaderboard(@CurrentUser User user) {
+        java.util.List<LeaderboardEntryResponse> response = dashboardService.getStimulusSeekerLeaderboard(user);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
