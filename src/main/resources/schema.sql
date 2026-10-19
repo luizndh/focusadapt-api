@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     completed_cycles INTEGER NOT NULL DEFAULT 0,
     total_pauses_count INTEGER NOT NULL DEFAULT 0,
     xp_awarded INTEGER NOT NULL DEFAULT 0,
+    quiz_bonus_xp INTEGER NOT NULL DEFAULT 0,
     deleted BOOLEAN NOT NULL DEFAULT false,
     user_id UUID NOT NULL,
     study_plan_id UUID,
