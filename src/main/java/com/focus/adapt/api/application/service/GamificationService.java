@@ -90,6 +90,29 @@ public class GamificationService {
         return (int) Math.round(BASE_TASK_XP * multiplier);
     }
 
+    /**
+     * Retorna o streak efetivo do usuário considerando a data do último estudo.
+     * Se o usuário ficou mais de 1 dia sem estudar (daysBetween > 1), a sequência foi quebrada e retorna 0.
+     */
+    public static int resolveEffectiveStreak(User user) {
+        return resolveEffectiveStreak(user, LocalDate.now());
+    }
+
+    public static int resolveEffectiveStreak(User user, LocalDate referenceDate) {
+        if (user == null || user.getStreak() <= 0) {
+            return 0;
+        }
+        LocalDate lastStudy = user.getLastStudyDate();
+        if (lastStudy == null) {
+            return user.getStreak();
+        }
+        long daysBetween = ChronoUnit.DAYS.between(lastStudy, referenceDate);
+        if (daysBetween > 1) {
+            return 0;
+        }
+        return user.getStreak();
+    }
+
     @Transactional
     public SessionGamificationResult processSessionCompletion(StudySession session, User user) {
         if (session.getXpAwarded() > 0) {
@@ -123,8 +146,10 @@ public class GamificationService {
         } else {
             long daysBetween = ChronoUnit.DAYS.between(lastStudy, today);
             if (daysBetween == 1) {
-                user.setStreak(user.getStreak() + 1);
+                user.setStreak(Math.max(1, user.getStreak()) + 1);
             } else if (daysBetween > 1) {
+                user.setStreak(1);
+            } else if (user.getStreak() <= 0) {
                 user.setStreak(1);
             }
         }

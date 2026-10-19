@@ -69,7 +69,7 @@ public class DashboardService {
         return DashboardResponse.builder()
                 .userName(currentUser.getName())
                 .xpPoints(currentUser.getPoints())
-                .streak(currentUser.getStreak())
+                .streak(GamificationService.resolveEffectiveStreak(currentUser))
                 .procrastinationProfile(currentUser.getProcrastinationProfile() != null ? currentUser.getProcrastinationProfile().name() : null)
                 .activeMissions(activeMissions)
                 .unlockedBadges(unlockedBadges)

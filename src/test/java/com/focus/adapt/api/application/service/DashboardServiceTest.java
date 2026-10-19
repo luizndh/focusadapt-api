@@ -1,5 +1,6 @@
 package com.focus.adapt.api.application.service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -80,5 +81,22 @@ class DashboardServiceTest {
         assertEquals("Test User", response.getUserName());
         assertEquals(100, response.getXpPoints());
         assertEquals(5, response.getStreak());
+    }
+
+    @Test
+    void shouldReturnZeroStreakWhenLastStudyDateIsMoreThanOneDayAgo() {
+        testUser.setLastStudyDate(LocalDate.now().minusDays(2));
+
+        when(userMissionRepository.findByUserAndStatus(any(User.class), eq(UserMissionStatus.IN_PROGRESS)))
+                .thenReturn(Collections.emptyList());
+        when(userAchievementRepository.findByUser(any(User.class), any(Pageable.class)))
+                .thenReturn(Page.empty());
+        when(studySessionRepository.findByUserAndStatus(any(User.class), eq(StudySessionStatus.COMPLETED), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        DashboardResponse response = dashboardService.getDashboard(testUser);
+
+        assertNotNull(response);
+        assertEquals(0, response.getStreak());
     }
 }

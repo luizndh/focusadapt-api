@@ -1,5 +1,6 @@
 package com.focus.adapt.api.application.service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -551,6 +552,79 @@ class GamificationServiceTest {
         assertEquals(125, user.getPoints());
     }
 
+    @Test
+    void shouldStartStreakAtOneKeepSameDayIncrementConsecutiveDayAndResetAfterGap() {
+        user.setProcrastinationProfile(ProcrastinationProfile.STIMULUS_SEEKER);
+        user.setStreak(0);
+        user.setLastStudyDate(null);
+
+        mockEmptyGamificationDependencies();
+
+        // 1. Primeiro estudo (lastStudyDate == null) -> streak = 1
+        StudySession session1 = StudySession.builder()
+                .title("Day 1 Session 1")
+                .studyMode(StudyMode.CONTINUOUS)
+                .studyTasks(List.of(createTask("Task 1")))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        gamificationService.processSessionCompletion(session1, user);
+        assertEquals(1, user.getStreak());
+        assertEquals(LocalDate.now(), user.getLastStudyDate());
+
+        // 2. Segunda sessão no mesmo dia -> streak permanece 1
+        StudySession session2 = StudySession.builder()
+                .title("Day 1 Session 2")
+                .studyMode(StudyMode.CONTINUOUS)
+                .studyTasks(List.of(createTask("Task 2")))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        gamificationService.processSessionCompletion(session2, user);
+        assertEquals(1, user.getStreak());
+
+        // 3. Estudo no dia seguinte (simulando lastStudyDate = ontem e streak = 3) -> streak = 4
+        user.setStreak(3);
+        user.setLastStudyDate(LocalDate.now().minusDays(1));
+        StudySession session3 = StudySession.builder()
+                .title("Consecutive Day Session")
+                .studyMode(StudyMode.CONTINUOUS)
+                .studyTasks(List.of(createTask("Task 3")))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        gamificationService.processSessionCompletion(session3, user);
+        assertEquals(4, user.getStreak());
+        assertEquals(LocalDate.now(), user.getLastStudyDate());
+
+        // 4. Quebra de sequência (lastStudyDate = 3 dias atrás) -> reinicia em 1 ao estudar
+        user.setStreak(4);
+        user.setLastStudyDate(LocalDate.now().minusDays(3));
+        StudySession session4 = StudySession.builder()
+                .title("Session After Gap")
+                .studyMode(StudyMode.CONTINUOUS)
+                .studyTasks(List.of(createTask("Task 4")))
+                .status(StudySessionStatus.COMPLETED)
+                .build();
+        gamificationService.processSessionCompletion(session4, user);
+        assertEquals(1, user.getStreak());
+        assertEquals(LocalDate.now(), user.getLastStudyDate());
+    }
+
+    @Test
+    void shouldResolveEffectiveStreakCorrectlyWhenActiveOrExpired() {
+        LocalDate today = LocalDate.of(2026, 10, 19);
+
+        User activeToday = User.builder().streak(5).lastStudyDate(today).build();
+        assertEquals(5, GamificationService.resolveEffectiveStreak(activeToday, today));
+
+        User activeYesterday = User.builder().streak(5).lastStudyDate(today.minusDays(1)).build();
+        assertEquals(5, GamificationService.resolveEffectiveStreak(activeYesterday, today));
+
+        User expiredTwoDaysAgo = User.builder().streak(5).lastStudyDate(today.minusDays(2)).build();
+        assertEquals(0, GamificationService.resolveEffectiveStreak(expiredTwoDaysAgo, today));
+
+        User zeroStreak = User.builder().streak(0).lastStudyDate(today).build();
+        assertEquals(0, GamificationService.resolveEffectiveStreak(zeroStreak, today));
+    }
+
     private StudyTask createTask(String title) {
         StudyTask task = StudyTask.builder().title(title).build();
         task.setId(UUID.randomUUID());
@@ -564,4 +638,5 @@ class GamificationServiceTest {
         when(badgeRepository.findAll()).thenReturn(Collections.emptyList());
     }
 }
+
 
