@@ -38,6 +38,7 @@ public class StudySessionResponse {
     private int multiplierBonusXp;
     @Builder.Default
     private double appliedMultiplier = 1.0;
+    private int quizBonusXp;
     private int badgeBonusXp;
     private int totalXp;
     private int xpEarned;

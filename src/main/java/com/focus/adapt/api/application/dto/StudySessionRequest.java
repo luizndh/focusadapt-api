@@ -49,4 +49,5 @@ public class StudySessionRequest {
     private Integer completedCycles;
     private Integer effectiveStudyMinutes;
     private Integer totalPausesCount;
+    private Integer quizBonusXp;
 }

@@ -87,6 +87,10 @@ public class StudySession extends BaseEntity {
     @Builder.Default
     private int xpAwarded = 0;
 
+    @Column(name = "quiz_bonus_xp", nullable = false)
+    @Builder.Default
+    private int quizBonusXp = 0;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean deleted = false;

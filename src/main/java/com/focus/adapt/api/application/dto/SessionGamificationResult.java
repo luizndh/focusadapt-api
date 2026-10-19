@@ -12,7 +12,8 @@ public record SessionGamificationResult(
         List<Badge> unlockedBadges,
         int baseSessionXp,
         int multiplierBonusXp,
-        double appliedMultiplier
+        double appliedMultiplier,
+        int quizBonusXp
 ) {
     public SessionGamificationResult(
             int sessionXp,
@@ -20,10 +21,22 @@ public record SessionGamificationResult(
             int totalXp,
             List<Badge> unlockedBadges
     ) {
-        this(sessionXp, badgeBonusXp, totalXp, unlockedBadges, sessionXp, 0, 1.0);
+        this(sessionXp, badgeBonusXp, totalXp, unlockedBadges, sessionXp, 0, 1.0, 0);
+    }
+
+    public SessionGamificationResult(
+            int sessionXp,
+            int badgeBonusXp,
+            int totalXp,
+            List<Badge> unlockedBadges,
+            int baseSessionXp,
+            int multiplierBonusXp,
+            double appliedMultiplier
+    ) {
+        this(sessionXp, badgeBonusXp, totalXp, unlockedBadges, baseSessionXp, multiplierBonusXp, appliedMultiplier, 0);
     }
 
     public static SessionGamificationResult empty() {
-        return new SessionGamificationResult(0, 0, 0, Collections.emptyList(), 0, 0, 1.0);
+        return new SessionGamificationResult(0, 0, 0, Collections.emptyList(), 0, 0, 1.0, 0);
     }
 }

@@ -132,9 +132,13 @@ public class GamificationService {
         int multiplierBonusXp = multipliedTasksXp - baseTasksXp;
         double appliedMultiplier = getMultiplierForTaskIndex(taskCount - 1, profile);
 
+        int quizBonus = (profile == ProcrastinationProfile.STIMULUS_SEEKER && session.getQuizBonusXp() > 0)
+                ? session.getQuizBonusXp()
+                : 0;
+
         int pomodoroBonus = (session.getStudyMode() == StudyMode.POMODORO) ? POMODORO_BONUS_XP : 0;
         int baseSessionXp = baseTasksXp + pomodoroBonus;
-        int sessionPoints = multipliedTasksXp + pomodoroBonus;
+        int sessionPoints = multipliedTasksXp + pomodoroBonus + quizBonus;
 
         user.setPoints(user.getPoints() + sessionPoints);
 
@@ -200,7 +204,8 @@ public class GamificationService {
                 newlyUnlockedBadges,
                 baseSessionXp,
                 multiplierBonusXp,
-                appliedMultiplier
+                appliedMultiplier,
+                quizBonus
         );
     }
 

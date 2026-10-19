@@ -625,10 +625,52 @@ class GamificationServiceTest {
         assertEquals(0, GamificationService.resolveEffectiveStreak(zeroStreak, today));
     }
 
+    @Test
+    void shouldAwardQuizBonusXpOnlyForStimulusSeeker() {
+        user.setProcrastinationProfile(ProcrastinationProfile.STIMULUS_SEEKER);
+        user.setPoints(100);
+        mockEmptyGamificationDependencies();
+
+        StudySession session = StudySession.builder()
+                .title("Quiz Session")
+                .studyMode(StudyMode.CONTINUOUS)
+                .studyTasks(List.of(createTask("T1")))
+                .quizBonusXp(15)
+                .build();
+
+        SessionGamificationResult result = gamificationService.processSessionCompletion(session, user);
+
+        assertEquals(15, result.quizBonusXp());
+        // Base task = 50, Quiz bonus = 15 -> sessionXp = 65
+        assertEquals(65, result.sessionXp());
+        assertEquals(65, result.totalXp());
+        assertEquals(165, user.getPoints());
+    }
+
+    @Test
+    void shouldNotAwardQuizBonusXpForPerfectionist() {
+        user.setProcrastinationProfile(ProcrastinationProfile.PERFECTIONIST);
+        user.setPoints(100);
+        mockEmptyGamificationDependencies();
+
+        StudySession session = StudySession.builder()
+                .title("Quiz Session Perfectionist")
+                .studyMode(StudyMode.CONTINUOUS)
+                .studyTasks(List.of(createTask("T1")))
+                .quizBonusXp(15)
+                .build();
+
+        SessionGamificationResult result = gamificationService.processSessionCompletion(session, user);
+
+        assertEquals(0, result.quizBonusXp());
+        // Base task = 50, Quiz bonus = 0 -> sessionXp = 50
+        assertEquals(50, result.sessionXp());
+        assertEquals(50, result.totalXp());
+        assertEquals(150, user.getPoints());
+    }
+
     private StudyTask createTask(String title) {
-        StudyTask task = StudyTask.builder().title(title).build();
-        task.setId(UUID.randomUUID());
-        return task;
+        return StudyTask.builder().title(title).build();
     }
 
     private void mockEmptyGamificationDependencies() {

@@ -80,6 +80,9 @@ public class StudySessionService {
         if (request.getTotalPausesCount() != null) {
             session.setTotalPausesCount(request.getTotalPausesCount());
         }
+        if (request.getQuizBonusXp() != null) {
+            session.setQuizBonusXp(request.getQuizBonusXp());
+        }
 
         associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);
 
@@ -163,6 +166,9 @@ public class StudySessionService {
         if (request.getTotalPausesCount() != null) {
             session.setTotalPausesCount(request.getTotalPausesCount());
         }
+        if (request.getQuizBonusXp() != null) {
+            session.setQuizBonusXp(request.getQuizBonusXp());
+        }
 
         associateTasksAndPlan(session, request.getStudyTaskIds(), request.getStudyPlanId(), user);
 
@@ -194,6 +200,7 @@ public class StudySessionService {
         response.setBaseSessionXp(gamificationResult.baseSessionXp());
         response.setMultiplierBonusXp(gamificationResult.multiplierBonusXp());
         response.setAppliedMultiplier(gamificationResult.appliedMultiplier());
+        response.setQuizBonusXp(gamificationResult.quizBonusXp());
         response.setBadgeBonusXp(gamificationResult.badgeBonusXp());
         response.setTotalXp(gamificationResult.totalXp());
         response.setXpEarned(gamificationResult.totalXp());
