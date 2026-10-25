@@ -24,8 +24,5 @@ COPY --from=build --chown=spring:spring /app/target/*.jar app.jar
 # Expose server port
 EXPOSE 8080
 
-# Mount standard temp directory volume
-VOLUME /tmp
-
 # Configure JVM flags optimized for Docker environments
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-XX:+UseG1GC", "-jar", "app.jar"]
